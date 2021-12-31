@@ -1,0 +1,402 @@
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "0oB-d6-NNE"; */
+"0oB-d6-NNE.text" = "μT";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "0z8-s5-uI1"; */
+"0z8-s5-uI1.text" = "μT";
+
+/* Class = "UIViewController"; title = "Window Function"; ObjectID = "2Cn-Q7-hUX"; */
+"2Cn-Q7-hUX.title" = "Função de janela";
+
+/* Class = "UILabel"; text = "Min:"; ObjectID = "2Zm-aK-KGt"; */
+"2Zm-aK-KGt.text" = "Min:";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "3LK-43-6Gi"; */
+"3LK-43-6Gi.text" = "μT";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "3ar-4e-Z4N"; */
+"3ar-4e-Z4N.text" = "G";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "3et-TO-j3S"; */
+"3et-TO-j3S.text" = "G";
+
+/* Class = "UIViewController"; title = "VIB RMS"; ObjectID = "4VG-jl-cvA"; */
+"4VG-jl-cvA.title" = "VIB RMS";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "4ep-yU-wDI"; */
+"4ep-yU-wDI.text" = "μT";
+
+/* Class = "UILabel"; text = "Avg:"; ObjectID = "4lT-iR-Nes"; */
+"4lT-iR-Nes.text" = "Avg:";
+
+/* Class = "UILabel"; text = "Min:"; ObjectID = "73h-Dv-mb9"; */
+"73h-Dv-mb9.text" = "Min:";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "7kr-B8-ueT"; */
+"7kr-B8-ueT.text" = "G";
+
+/* Class = "UIButton"; normalTitle = "Clear"; ObjectID = "7qf-cU-z6p"; */
+"7qf-cU-z6p.normalTitle" = "Claro";
+
+/* Class = "UILabel"; text = "Avg:"; ObjectID = "7xL-8O-t89"; */
+"7xL-8O-t89.text" = "Avg:";
+
+/* Class = "UILabel"; text = "Color"; ObjectID = "8Hu-wf-xwb"; */
+"8Hu-wf-xwb.text" = "Cor";
+
+/* Class = "UILabel"; text = "Max:"; ObjectID = "8aR-v1-Rl7"; */
+"8aR-v1-Rl7.text" = "Max:";
+
+/* Class = "UIViewController"; title = "SND Scope"; ObjectID = "8rJ-Kc-sve"; */
+"8rJ-Kc-sve.title" = "SND Alcance";
+
+/* Class = "UIViewController"; title = "SND Spectrum"; ObjectID = "9pv-A4-QxB"; */
+"9pv-A4-QxB.title" = "SND Espectro";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "A5t-7L-G7q"; */
+"A5t-7L-G7q.text" = "μT";
+
+/* Class = "UILabel"; text = "Avg:"; ObjectID = "ALu-I0-9yW"; */
+"ALu-I0-9yW.text" = "Avg:";
+
+/* Class = "UILabel"; text = "Avg:"; ObjectID = "CJV-D1-eeT"; */
+"CJV-D1-eeT.text" = "Avg:";
+
+/* Class = "UILabel"; text = "Hz"; ObjectID = "Civ-9o-JHV"; */
+"Civ-9o-JHV.text" = "Hz";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "Cmi-Wk-1vN"; */
+"Cmi-Wk-1vN.text" = "μT";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "Cya-lh-dpm"; */
+"Cya-lh-dpm.text" = "G";
+
+/* Class = "UILabel"; text = "Max:"; ObjectID = "Ddu-MM-fNL"; */
+"Ddu-MM-fNL.text" = "Max:";
+
+/* Class = "UISegmentedControl"; EGS-LX-dfx.segmentTitles[0] = "Log"; ObjectID = "EGS-LX-dfx"; */
+"EGS-LX-dfx.segmentTitles[0]" = "Logaritmo";
+
+/* Class = "UISegmentedControl"; EGS-LX-dfx.segmentTitles[1] = "Linear"; ObjectID = "EGS-LX-dfx"; */
+"EGS-LX-dfx.segmentTitles[1]" = "Linear";
+
+/* Class = "UILabel"; text = "Max:"; ObjectID = "F2d-yf-h18"; */
+"F2d-yf-h18.text" = "Max:";
+
+/* Class = "UISegmentedControl"; F35-9O-DTC.segmentTitles[0] = "OFF"; ObjectID = "F35-9O-DTC"; */
+"F35-9O-DTC.segmentTitles[0]" = "FORA";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "F8P-QI-CRE"; */
+"F8P-QI-CRE.text" = "μT";
+
+/* Class = "UILabel"; text = "Hz"; ObjectID = "FVA-0P-m53"; */
+"FVA-0P-m53.text" = "Hz";
+
+/* Class = "UIViewController"; title = "VIB Scope"; ObjectID = "FVX-2w-TR8"; */
+"FVX-2w-TR8.title" = "VIB Alcance";
+
+/* Class = "UISegmentedControl"; HOC-5K-5v5.segmentTitles[0] = "Sine"; ObjectID = "HOC-5K-5v5"; */
+"HOC-5K-5v5.segmentTitles[0]" = "Seno";
+
+/* Class = "UISegmentedControl"; HOC-5K-5v5.segmentTitles[1] = "Sawtooth"; ObjectID = "HOC-5K-5v5"; */
+"HOC-5K-5v5.segmentTitles[1]" = "Dente de serra";
+
+/* Class = "UISegmentedControl"; HOC-5K-5v5.segmentTitles[2] = "Triangular"; ObjectID = "HOC-5K-5v5"; */
+"HOC-5K-5v5.segmentTitles[2]" = "Triangular";
+
+/* Class = "UILabel"; text = "Max:"; ObjectID = "HeQ-Kk-IpC"; */
+"HeQ-Kk-IpC.text" = "Max:";
+
+/* Class = "UISegmentedControl"; Hkt-mL-sbb.segmentTitles[0] = "None"; ObjectID = "Hkt-mL-sbb"; */
+"Hkt-mL-sbb.segmentTitles[0]" = "Nenhum";
+
+/* Class = "UISegmentedControl"; Hkt-mL-sbb.segmentTitles[1] = "Hamming"; ObjectID = "Hkt-mL-sbb"; */
+"Hkt-mL-sbb.segmentTitles[1]" = "Hamming";
+
+/* Class = "UISegmentedControl"; Hkt-mL-sbb.segmentTitles[2] = "Hanning"; ObjectID = "Hkt-mL-sbb"; */
+"Hkt-mL-sbb.segmentTitles[2]" = "Hanning";
+
+/* Class = "UISegmentedControl"; Hkt-mL-sbb.segmentTitles[3] = "Blackman"; ObjectID = "Hkt-mL-sbb"; */
+"Hkt-mL-sbb.segmentTitles[3]" = "Blackman";
+
+/* Class = "UILabel"; text = "Min:"; ObjectID = "Ie1-5z-p3X"; */
+"Ie1-5z-p3X.text" = "Min:";
+
+/* Class = "UILabel"; text = "dB"; ObjectID = "If8-Tw-IZl"; */
+"If8-Tw-IZl.text" = "dB";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "Ipf-Ir-fAF"; */
+"Ipf-Ir-fAF.text" = "μT";
+
+/* Class = "UILabel"; text = "Z Coordinate"; ObjectID = "JKy-xw-w3a"; */
+"JKy-xw-w3a.text" = "Z Coordenada";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "JYg-p2-gzy"; */
+"JYg-p2-gzy.text" = "G";
+
+/* Class = "UILabel"; text = "dB"; ObjectID = "Jp1-U7-QdG"; */
+"Jp1-U7-QdG.text" = "dB";
+
+/* Class = "UISegmentedControl"; KPk-Uq-aTP.segmentTitles[0] = "None"; ObjectID = "KPk-Uq-aTP"; */
+"KPk-Uq-aTP.segmentTitles[0]" = "Nenhum";
+
+/* Class = "UISegmentedControl"; KPk-Uq-aTP.segmentTitles[1] = "Fast"; ObjectID = "KPk-Uq-aTP"; */
+"KPk-Uq-aTP.segmentTitles[1]" = "Rápido";
+
+/* Class = "UISegmentedControl"; KPk-Uq-aTP.segmentTitles[2] = "Slow"; ObjectID = "KPk-Uq-aTP"; */
+"KPk-Uq-aTP.segmentTitles[2]" = "Lento";
+
+/* Class = "UISegmentedControl"; KPk-Uq-aTP.segmentTitles[3] = "Infinite"; ObjectID = "KPk-Uq-aTP"; */
+"KPk-Uq-aTP.segmentTitles[3]" = "Infinito";
+
+/* Class = "UITabBarItem"; title = "VIB RMS"; ObjectID = "Kdb-XV-At2"; */
+"Kdb-XV-At2.title" = "VIB RMS";
+
+/* Class = "UITextField"; text = "440"; ObjectID = "KtV-kb-5cB"; */
+"KtV-kb-5cB.text" = "440";
+
+/* Class = "UILabel"; text = "dB"; ObjectID = "LEg-g8-MLq"; */
+"LEg-g8-MLq.text" = "dB";
+
+/* Class = "UILabel"; text = "dB"; ObjectID = "N9F-5e-oWS"; */
+"N9F-5e-oWS.text" = "dB";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "NC6-EE-9hD"; */
+"NC6-EE-9hD.text" = "G";
+
+/* Class = "UIButton"; normalTitle = "None"; ObjectID = "NUF-5q-ZdW"; */
+"NUF-5q-ZdW.normalTitle" = "Nenhum";
+
+/* Class = "UILabel"; text = "Max:"; ObjectID = "Nk0-sz-6WU"; */
+"Nk0-sz-6WU.text" = "Max:";
+
+/* Class = "UILabel"; text = "Min:"; ObjectID = "NnQ-KB-dJW"; */
+"NnQ-KB-dJW.text" = "Min:";
+
+/* Class = "UILabel"; text = "Average"; ObjectID = "Nxr-Tq-w1L"; */
+"Nxr-Tq-w1L.text" = "Média";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "P0P-H1-upc"; */
+"P0P-H1-upc.text" = "G";
+
+/* Class = "UIButton"; normalTitle = "Clear"; ObjectID = "PwC-uc-RHR"; */
+"PwC-uc-RHR.normalTitle" = "Claro";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "Qtt-8q-oKX"; */
+"Qtt-8q-oKX.text" = "μT";
+
+/* Class = "UILabel"; text = "Label"; ObjectID = "R2i-fH-Nc8"; */
+"R2i-fH-Nc8.text" = "Rótulo";
+
+/* Class = "UILabel"; text = "Max:"; ObjectID = "R9D-Lv-O5h"; */
+"R9D-Lv-O5h.text" = "Max:";
+
+/* Class = "UILabel"; text = "Hz"; ObjectID = "RaI-ar-Huw"; */
+"RaI-ar-Huw.text" = "Hz";
+
+/* Class = "UILabel"; text = "Avg:"; ObjectID = "St4-yH-vlM"; */
+"St4-yH-vlM.text" = "Avg:";
+
+/* Class = "UITabBarItem"; title = "MF Scope"; ObjectID = "TOo-wd-lah"; */
+"TOo-wd-lah.title" = "MF Alcance";
+
+/* Class = "UITabBarItem"; title = "MF RMS"; ObjectID = "V2T-1o-nUe"; */
+"V2T-1o-nUe.title" = "MF RMS";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "Wdg-I0-Wg0"; */
+"Wdg-I0-Wg0.text" = "μT";
+
+/* Class = "UILabel"; text = "Info"; ObjectID = "WeH-DT-Hlz"; */
+"WeH-DT-Hlz.text" = "Info";
+
+/* Class = "UIButton"; normalTitle = "Clear"; ObjectID = "Y35-Vv-A4J"; */
+"Y35-Vv-A4J.normalTitle" = "Claro";
+
+/* Class = "UIViewController"; title = "MF RMS"; ObjectID = "YFE-ty-8fT"; */
+"YFE-ty-8fT.title" = "MF RMS";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "YN5-27-Vbe"; */
+"YN5-27-Vbe.text" = "μT";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "YNQ-L8-xZ8"; */
+"YNQ-L8-xZ8.text" = "μT";
+
+/* Class = "UIButton"; normalTitle = "Max"; ObjectID = "Yh3-Ax-Spa"; */
+"Yh3-Ax-Spa.normalTitle" = "Max";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "Yq1-gC-ZgI"; */
+"Yq1-gC-ZgI.text" = "μT";
+
+/* Class = "UIButton"; normalTitle = "Peak"; ObjectID = "ZJx-gN-2Co"; */
+"ZJx-gN-2Co.normalTitle" = "Pico";
+
+/* Class = "UILabel"; text = "Window Function"; ObjectID = "ZSQ-EK-OtE"; */
+"ZSQ-EK-OtE.text" = "Função de janela";
+
+/* Class = "UIButton"; normalTitle = "Typical Settings"; ObjectID = "aZq-v5-n5s"; */
+"aZq-v5-n5s.normalTitle" = "Típico";
+
+/* Class = "UITabBarItem"; title = "SND Spectrum"; ObjectID = "acW-dT-cKf"; */
+"acW-dT-cKf.title" = "SND Espectro";
+
+/* Class = "UILabel"; text = "Max:"; ObjectID = "ah5-q2-KU6"; */
+"ah5-q2-KU6.text" = "Max:";
+
+/* Class = "UIViewController"; title = "VIB Spectrum"; ObjectID = "b1E-uP-jth"; */
+"b1E-uP-jth.title" = "VIB Espectro";
+
+/* Class = "UIButton"; normalTitle = "Typical Settings"; ObjectID = "cA9-5s-5q6"; */
+"cA9-5s-5q6.normalTitle" = "Típico";
+
+/* Class = "UILabel"; text = "Y Coordinate"; ObjectID = "cAh-qR-uNT"; */
+"cAh-qR-uNT.text" = "Y Coordenada";
+
+/* Class = "UITabBarItem"; title = "SND Scope"; ObjectID = "cPa-gy-q4n"; */
+"cPa-gy-q4n.title" = "SND Alcance";
+
+/* Class = "UILabel"; text = "dB"; ObjectID = "cd0-Vg-Hyu"; */
+"cd0-Vg-Hyu.text" = "dB";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "cfh-6d-XZp"; */
+"cfh-6d-XZp.text" = "G";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "d8f-yj-lPp"; */
+"d8f-yj-lPp.text" = "G";
+
+/* Class = "UIButton"; normalTitle = "Min"; ObjectID = "dML-8n-PHT"; */
+"dML-8n-PHT.normalTitle" = "Min";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "da9-di-zp5"; */
+"da9-di-zp5.text" = "G";
+
+/* Class = "UIButton"; normalTitle = "FFT"; ObjectID = "dcZ-We-88U"; */
+"dcZ-We-88U.normalTitle" = "FFT";
+
+/* Class = "UILabel"; text = "Max:"; ObjectID = "dtJ-Ml-nz1"; */
+"dtJ-Ml-nz1.text" = "Max:";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "ePf-8V-YwH"; */
+"ePf-8V-YwH.text" = "G";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "f6v-do-8ed"; */
+"f6v-do-8ed.text" = "G";
+
+/* Class = "UILabel"; text = "Gain"; ObjectID = "fcr-sV-0oI"; */
+"fcr-sV-0oI.text" = "Ganho";
+
+/* Class = "UITabBarItem"; title = "Info"; ObjectID = "gwH-Gv-uxk"; */
+"gwH-Gv-uxk.title" = "Informações";
+
+/* Class = "UIViewController"; title = "Information"; ObjectID = "h5f-Ah-JQ4"; */
+"h5f-Ah-JQ4.title" = "Em formação";
+
+/* Class = "UIButton"; normalTitle = "Exploration Settings"; ObjectID = "hcX-5p-Vq4"; */
+"hcX-5p-Vq4.normalTitle" = "Exploração";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "hlb-Bi-Zu3"; */
+"hlb-Bi-Zu3.text" = "G";
+
+/* Class = "UILabel"; text = "Gain"; ObjectID = "hpE-Rm-zz1"; */
+"hpE-Rm-zz1.text" = "Ganho";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "iJt-9U-QUf"; */
+"iJt-9U-QUf.text" = "G";
+
+/* Class = "UILabel"; text = "22050"; ObjectID = "iiL-Yv-XQZ"; */
+"iiL-Yv-XQZ.text" = "22050";
+
+/* Class = "UITabBarItem"; title = "VIB Scope"; ObjectID = "j6a-gL-n0K"; */
+"j6a-gL-n0K.title" = "VIB Alcance";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "jQL-hf-9B6"; */
+"jQL-hf-9B6.text" = "μT";
+
+/* Class = "UILabel"; text = "Avg:"; ObjectID = "jzF-Fk-JUy"; */
+"jzF-Fk-JUy.text" = "Avg:";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "k7P-fj-L9O"; */
+"k7P-fj-L9O.text" = "G";
+
+/* Class = "UIViewController"; title = "Oscillator"; ObjectID = "kG8-my-zHH"; */
+"kG8-my-zHH.title" = "Oscilador";
+
+/* Class = "UILabel"; text = "100"; ObjectID = "lE6-wQ-RA3"; */
+"lE6-wQ-RA3.text" = "100";
+
+/* Class = "UILabel"; text = "X Coordinate"; ObjectID = "m6c-uZ-gqj"; */
+"m6c-uZ-gqj.text" = "X Coordenada";
+
+/* Class = "UILabel"; text = "dB"; ObjectID = "mty-yz-Ff7"; */
+"mty-yz-Ff7.text" = "dB";
+
+/* Class = "UIButton"; normalTitle = "Typical Settings"; ObjectID = "nC0-yQ-aAa"; */
+"nC0-yQ-aAa.normalTitle" = "Típico";
+
+/* Class = "UILabel"; text = "Gain"; ObjectID = "nWl-o1-CwH"; */
+"nWl-o1-CwH.text" = "Ganho";
+
+/* Class = "UITabBarItem"; title = "SND RMS"; ObjectID = "nWx-v3-ygC"; */
+"nWx-v3-ygC.title" = "SND RMS";
+
+/* Class = "UILabel"; text = "Min:"; ObjectID = "nns-Sj-hiu"; */
+"nns-Sj-hiu.text" = "Min:";
+
+/* Class = "UIViewController"; title = "SND RMS"; ObjectID = "ogd-mc-kjJ"; */
+"ogd-mc-kjJ.title" = "SND RMS";
+
+/* Class = "UILabel"; text = "Window Function"; ObjectID = "ogh-zV-1YE"; */
+"ogh-zV-1YE.text" = "Função de janela";
+
+/* Class = "UIViewController"; title = "MF Scope"; ObjectID = "p1S-Aa-IF2"; */
+"p1S-Aa-IF2.title" = "MF Alcance";
+
+/* Class = "UILabel"; text = "Min:"; ObjectID = "pDk-Yd-IjZ"; */
+"pDk-Yd-IjZ.text" = "Min:";
+
+/* Class = "UILabel"; text = "Avg:"; ObjectID = "q5r-KE-vks"; */
+"q5r-KE-vks.text" = "Avg:";
+
+/* Class = "UILabel"; text = "None"; ObjectID = "qLA-8f-BNV"; */
+"qLA-8f-BNV.text" = "Nenhum";
+
+/* Class = "UILabel"; text = "Hz"; ObjectID = "r3o-C2-Pfs"; */
+"r3o-C2-Pfs.text" = "Hz";
+
+/* Class = "UILabel"; text = "Noise Reduction"; ObjectID = "rKW-RM-kLq"; */
+"rKW-RM-kLq.text" = "Redução de ruído";
+
+/* Class = "UILabel"; text = "Avg:"; ObjectID = "rPh-16-4lR"; */
+"rPh-16-4lR.text" = "Avg:";
+
+/* Class = "UITabBarItem"; title = "Oscillator"; ObjectID = "rbi-UW-ROT"; */
+"rbi-UW-ROT.title" = "Oscilador";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "red-xT-Xar"; */
+"red-xT-Xar.text" = "G";
+
+/* Class = "UILabel"; text = "Avg:"; ObjectID = "uMU-Yu-4Jl"; */
+"uMU-Yu-4Jl.text" = "Avg:";
+
+/* Class = "UILabel"; text = "Min:"; ObjectID = "v8l-3E-Jkq"; */
+"v8l-3E-Jkq.text" = "Min:";
+
+/* Class = "UILabel"; text = "Version"; ObjectID = "vZZ-kQ-70C"; */
+"vZZ-kQ-70C.text" = "Versão";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "vag-Cu-lIe"; */
+"vag-Cu-lIe.text" = "μT";
+
+/* Class = "UILabel"; text = "Max:"; ObjectID = "vbD-Tc-6wx"; */
+"vbD-Tc-6wx.text" = "Max:";
+
+/* Class = "UILabel"; text = "dB"; ObjectID = "x0Y-na-spm"; */
+"x0Y-na-spm.text" = "dB";
+
+/* Class = "UILabel"; text = "Min:"; ObjectID = "xzj-hq-uDt"; */
+"xzj-hq-uDt.text" = "Min:";
+
+/* Class = "UITabBarItem"; title = "VIB Spectrum"; ObjectID = "yL8-eC-olX"; */
+"yL8-eC-olX.title" = "VIB Espectro";
+
+/* Class = "UILabel"; text = "Min:"; ObjectID = "zSd-Np-dBL"; */
+"zSd-Np-dBL.text" = "Min:";

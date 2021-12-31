@@ -1,0 +1,307 @@
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "0oB-d6-NNE"; */
+"0oB-d6-NNE.text" = "μT";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "0z8-s5-uI1"; */
+"0z8-s5-uI1.text" = "μT";
+
+/* Class = "UILabel"; text = "Min:"; ObjectID = "2Zm-aK-KGt"; */
+"2Zm-aK-KGt.text" = "最小:";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "3LK-43-6Gi"; */
+"3LK-43-6Gi.text" = "μT";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "3ar-4e-Z4N"; */
+"3ar-4e-Z4N.text" = "G";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "3et-TO-j3S"; */
+"3et-TO-j3S.text" = "G";
+
+/* Class = "UIViewController"; title = "VIB RMS"; ObjectID = "4VG-jl-cvA"; */
+"4VG-jl-cvA.title" = "振動実効値";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "4ep-yU-wDI"; */
+"4ep-yU-wDI.text" = "μT";
+
+/* Class = "UILabel"; text = "Avg:"; ObjectID = "4lT-iR-Nes"; */
+"4lT-iR-Nes.text" = "平均:";
+
+/* Class = "UILabel"; text = "Min:"; ObjectID = "73h-Dv-mb9"; */
+"73h-Dv-mb9.text" = "最小:";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "7kr-B8-ueT"; */
+"7kr-B8-ueT.text" = "G";
+
+/* Class = "UILabel"; text = "Avg:"; ObjectID = "7xL-8O-t89"; */
+"7xL-8O-t89.text" = "平均:";
+
+/* Class = "UILabel"; text = "Max:"; ObjectID = "8aR-v1-Rl7"; */
+"8aR-v1-Rl7.text" = "最大:";
+
+/* Class = "UIViewController"; title = "SND Scope"; ObjectID = "8rJ-Kc-sve"; */
+"8rJ-Kc-sve.title" = "音声スコープ";
+
+/* Class = "UIViewController"; title = "SND Spectrum"; ObjectID = "9pv-A4-QxB"; */
+"9pv-A4-QxB.title" = "音声スペクトル";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "A5t-7L-G7q"; */
+"A5t-7L-G7q.text" = "μT";
+
+/* Class = "UILabel"; text = "Avg:"; ObjectID = "ALu-I0-9yW"; */
+"ALu-I0-9yW.text" = "平均:";
+
+/* Class = "UILabel"; text = "Avg:"; ObjectID = "CJV-D1-eeT"; */
+"CJV-D1-eeT.text" = "平均:";
+
+/* Class = "UILabel"; text = "Hz"; ObjectID = "Civ-9o-JHV"; */
+"Civ-9o-JHV.text" = "Hz";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "Cmi-Wk-1vN"; */
+"Cmi-Wk-1vN.text" = "μT";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "Cya-lh-dpm"; */
+"Cya-lh-dpm.text" = "G";
+
+/* Class = "UILabel"; text = "Max:"; ObjectID = "Ddu-MM-fNL"; */
+"Ddu-MM-fNL.text" = "最大:";
+
+/* Class = "UISegmentedControl"; EGS-LX-dfx.segmentTitles[0] = "Log"; ObjectID = "EGS-LX-dfx"; */
+"EGS-LX-dfx.segmentTitles[0]" = "対数";
+
+/* Class = "UISegmentedControl"; EGS-LX-dfx.segmentTitles[1] = "Linear"; ObjectID = "EGS-LX-dfx"; */
+"EGS-LX-dfx.segmentTitles[1]" = "リニア";
+
+/* Class = "UILabel"; text = "Max:"; ObjectID = "F2d-yf-h18"; */
+"F2d-yf-h18.text" = "最大:";
+
+/* Class = "UISegmentedControl"; F35-9O-DTC.segmentTitles[0] = "OFF"; ObjectID = "F35-9O-DTC"; */
+"F35-9O-DTC.segmentTitles[0]" = "OFF";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "F8P-QI-CRE"; */
+"F8P-QI-CRE.text" = "μT";
+
+/* Class = "UIViewController"; title = "VIB Scope"; ObjectID = "FVX-2w-TR8"; */
+"FVX-2w-TR8.title" = "振動スコープ";
+
+/* Class = "UISegmentedControl"; HOC-5K-5v5.segmentTitles[0] = "Sine"; ObjectID = "HOC-5K-5v5"; */
+"HOC-5K-5v5.segmentTitles[0]" = "正弦波";
+
+/* Class = "UISegmentedControl"; HOC-5K-5v5.segmentTitles[1] = "Sawtooth"; ObjectID = "HOC-5K-5v5"; */
+"HOC-5K-5v5.segmentTitles[1]" = "ノコギリ波";
+
+/* Class = "UISegmentedControl"; HOC-5K-5v5.segmentTitles[2] = "Triangular"; ObjectID = "HOC-5K-5v5"; */
+"HOC-5K-5v5.segmentTitles[2]" = "三角波";
+
+/* Class = "UILabel"; text = "Max:"; ObjectID = "HeQ-Kk-IpC"; */
+"HeQ-Kk-IpC.text" = "最大:";
+
+/* Class = "UILabel"; text = "Min:"; ObjectID = "Ie1-5z-p3X"; */
+"Ie1-5z-p3X.text" = "最小:";
+
+/* Class = "UILabel"; text = "dB"; ObjectID = "If8-Tw-IZl"; */
+"If8-Tw-IZl.text" = "dB";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "Ipf-Ir-fAF"; */
+"Ipf-Ir-fAF.text" = "μT";
+
+/* Class = "UILabel"; text = "Z Coordinate"; ObjectID = "JKy-xw-w3a"; */
+"JKy-xw-w3a.text" = "Z 座標";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "JYg-p2-gzy"; */
+"JYg-p2-gzy.text" = "G";
+
+/* Class = "UITabBarItem"; title = "VIB RMS"; ObjectID = "Kdb-XV-At2"; */
+"Kdb-XV-At2.title" = "振動実効値";
+
+/* Class = "UITextField"; text = "440"; ObjectID = "KtV-kb-5cB"; */
+"KtV-kb-5cB.text" = "440";
+
+/* Class = "UILabel"; text = "dB"; ObjectID = "LEg-g8-MLq"; */
+"LEg-g8-MLq.text" = "dB";
+
+/* Class = "UILabel"; text = "dB"; ObjectID = "N9F-5e-oWS"; */
+"N9F-5e-oWS.text" = "dB";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "NC6-EE-9hD"; */
+"NC6-EE-9hD.text" = "G";
+
+/* Class = "UILabel"; text = "Max:"; ObjectID = "Nk0-sz-6WU"; */
+"Nk0-sz-6WU.text" = "最大:";
+
+/* Class = "UILabel"; text = "Min:"; ObjectID = "NnQ-KB-dJW"; */
+"NnQ-KB-dJW.text" = "最小:";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "P0P-H1-upc"; */
+"P0P-H1-upc.text" = "G";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "Qtt-8q-oKX"; */
+"Qtt-8q-oKX.text" = "μT";
+
+/* Class = "UILabel"; text = "Label"; ObjectID = "R2i-fH-Nc8"; */
+"R2i-fH-Nc8.text" = "Label";
+
+/* Class = "UILabel"; text = "Max:"; ObjectID = "R9D-Lv-O5h"; */
+"R9D-Lv-O5h.text" = "最大:";
+
+/* Class = "UILabel"; text = "Hz"; ObjectID = "RaI-ar-Huw"; */
+"RaI-ar-Huw.text" = "Hz";
+
+/* Class = "UILabel"; text = "Avg:"; ObjectID = "St4-yH-vlM"; */
+"St4-yH-vlM.text" = "平均:";
+
+/* Class = "UITabBarItem"; title = "MF Scope"; ObjectID = "TOo-wd-lah"; */
+"TOo-wd-lah.title" = "磁界スコープ";
+
+/* Class = "UITabBarItem"; title = "MF RMS"; ObjectID = "V2T-1o-nUe"; */
+"V2T-1o-nUe.title" = "磁界実効値";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "Wdg-I0-Wg0"; */
+"Wdg-I0-Wg0.text" = "μT";
+
+/* Class = "UILabel"; text = "Info"; ObjectID = "WeH-DT-Hlz"; */
+"WeH-DT-Hlz.text" = "Info";
+
+/* Class = "UIViewController"; title = "MF RMS"; ObjectID = "YFE-ty-8fT"; */
+"YFE-ty-8fT.title" = "磁界実効値";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "YN5-27-Vbe"; */
+"YN5-27-Vbe.text" = "μT";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "YNQ-L8-xZ8"; */
+"YNQ-L8-xZ8.text" = "μT";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "Yq1-gC-ZgI"; */
+"Yq1-gC-ZgI.text" = "μT";
+
+/* Class = "UITabBarItem"; title = "SND Spectrum"; ObjectID = "acW-dT-cKf"; */
+"acW-dT-cKf.title" = "音声スペクトル";
+
+/* Class = "UILabel"; text = "Max:"; ObjectID = "ah5-q2-KU6"; */
+"ah5-q2-KU6.text" = "最大:";
+
+/* Class = "UIViewController"; title = "VIB Spectrum"; ObjectID = "b1E-uP-jth"; */
+"b1E-uP-jth.title" = "振動スペクトル";
+
+/* Class = "UILabel"; text = "Y Coordinate"; ObjectID = "cAh-qR-uNT"; */
+"cAh-qR-uNT.text" = "Y 座標";
+
+/* Class = "UITabBarItem"; title = "SND Scope"; ObjectID = "cPa-gy-q4n"; */
+"cPa-gy-q4n.title" = "音声スコープ";
+
+/* Class = "UILabel"; text = "dB"; ObjectID = "cd0-Vg-Hyu"; */
+"cd0-Vg-Hyu.text" = "dB";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "cfh-6d-XZp"; */
+"cfh-6d-XZp.text" = "G";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "d8f-yj-lPp"; */
+"d8f-yj-lPp.text" = "G";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "da9-di-zp5"; */
+"da9-di-zp5.text" = "G";
+
+/* Class = "UILabel"; text = "Max:"; ObjectID = "dtJ-Ml-nz1"; */
+"dtJ-Ml-nz1.text" = "最大:";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "ePf-8V-YwH"; */
+"ePf-8V-YwH.text" = "G";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "f6v-do-8ed"; */
+"f6v-do-8ed.text" = "G";
+
+/* Class = "UITabBarItem"; title = "Info"; ObjectID = "gwH-Gv-uxk"; */
+"gwH-Gv-uxk.title" = "情報";
+
+/* Class = "UIViewController"; title = "Information"; ObjectID = "h5f-Ah-JQ4"; */
+"h5f-Ah-JQ4.title" = "情報";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "hlb-Bi-Zu3"; */
+"hlb-Bi-Zu3.text" = "G";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "iJt-9U-QUf"; */
+"iJt-9U-QUf.text" = "G";
+
+/* Class = "UITabBarItem"; title = "VIB Scope"; ObjectID = "j6a-gL-n0K"; */
+"j6a-gL-n0K.title" = "振動スコープ";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "jQL-hf-9B6"; */
+"jQL-hf-9B6.text" = "μT";
+
+/* Class = "UILabel"; text = "Avg:"; ObjectID = "jzF-Fk-JUy"; */
+"jzF-Fk-JUy.text" = "平均:";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "k7P-fj-L9O"; */
+"k7P-fj-L9O.text" = "G";
+
+/* Class = "UIViewController"; title = "Oscillator"; ObjectID = "kG8-my-zHH"; */
+"kG8-my-zHH.title" = "発振器";
+
+/* Class = "UILabel"; text = "X Coordinate"; ObjectID = "m6c-uZ-gqj"; */
+"m6c-uZ-gqj.text" = "X 座標";
+
+/* Class = "UILabel"; text = "dB"; ObjectID = "mty-yz-Ff7"; */
+"mty-yz-Ff7.text" = "dB";
+
+/* Class = "UIButton"; normalTitle = "Play"; ObjectID = "n6m-4v-wDB"; */
+"n6m-4v-wDB.normalTitle" = "Play";
+
+/* Class = "UITabBarItem"; title = "SND RMS"; ObjectID = "nWx-v3-ygC"; */
+"nWx-v3-ygC.title" = "音声実効値";
+
+/* Class = "UILabel"; text = "Min:"; ObjectID = "nns-Sj-hiu"; */
+"nns-Sj-hiu.text" = "最小:";
+
+/* Class = "UIViewController"; title = "SND RMS"; ObjectID = "ogd-mc-kjJ"; */
+"ogd-mc-kjJ.title" = "音声実効値";
+
+/* Class = "UIViewController"; title = "MF Scope"; ObjectID = "p1S-Aa-IF2"; */
+"p1S-Aa-IF2.title" = "磁界スコープ";
+
+/* Class = "UILabel"; text = "Min:"; ObjectID = "pDk-Yd-IjZ"; */
+"pDk-Yd-IjZ.text" = "最小:";
+
+/* Class = "UILabel"; text = "Avg:"; ObjectID = "q5r-KE-vks"; */
+"q5r-KE-vks.text" = "平均:";
+
+/* Class = "UILabel"; text = "Hz"; ObjectID = "r3o-C2-Pfs"; */
+"r3o-C2-Pfs.text" = "Hz";
+
+/* Class = "UILabel"; text = "Avg:"; ObjectID = "rPh-16-4lR"; */
+"rPh-16-4lR.text" = "平均:";
+
+/* Class = "UITabBarItem"; title = "Oscillator"; ObjectID = "rbi-UW-ROT"; */
+"rbi-UW-ROT.title" = "発振器";
+
+/* Class = "UILabel"; text = "G"; ObjectID = "red-xT-Xar"; */
+"red-xT-Xar.text" = "G";
+
+/* Class = "UILabel"; text = "Avg:"; ObjectID = "uMU-Yu-4Jl"; */
+"uMU-Yu-4Jl.text" = "平均:";
+
+/* Class = "UILabel"; text = "Min:"; ObjectID = "v8l-3E-Jkq"; */
+"v8l-3E-Jkq.text" = "最小:";
+
+/* Class = "UILabel"; text = "Version"; ObjectID = "vZZ-kQ-70C"; */
+"vZZ-kQ-70C.text" = "バージョン";
+
+/* Class = "UILabel"; text = "μT"; ObjectID = "vag-Cu-lIe"; */
+"vag-Cu-lIe.text" = "μT";
+
+/* Class = "UILabel"; text = "Max:"; ObjectID = "vbD-Tc-6wx"; */
+"vbD-Tc-6wx.text" = "最大:";
+
+/* Class = "UILabel"; text = "dB"; ObjectID = "x0Y-na-spm"; */
+"x0Y-na-spm.text" = "dB";
+
+/* Class = "UILabel"; text = "Min:"; ObjectID = "xzj-hq-uDt"; */
+"xzj-hq-uDt.text" = "最小:";
+
+/* Class = "UITabBarItem"; title = "VIB Spectrum"; ObjectID = "yL8-eC-olX"; */
+"yL8-eC-olX.title" = "振動スペクトル";
+
+/* Class = "UILabel"; text = "Min:"; ObjectID = "zSd-Np-dBL"; */
+"zSd-Np-dBL.text" = "最小:";
+
+"Yh3-Ax-Spa.normalTitle" = "最大";
+
+"dML-8n-PHT.normalTitle" = "最小";

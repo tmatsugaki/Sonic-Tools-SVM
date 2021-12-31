@@ -1,0 +1,33 @@
+/*
+ * 一般
+ */
+"Can't work with a Jail Broken device." = "システムが改造された端末では動作しません。";
+"Are you sure to stop or snooze?" = "アラーム停止またはスヌーズしますか？";
+"OK" = "はい";
+"Select" = "選択";
+"Settings" = "設定";
+"Cancel" = "キャンセル";
+"Close" = "閉じる";
+"Stop" = "停止";
+"Save" = "保存";
+"Abort" = "異常終了";
+"Quit" = "終了";
+"Delete" = "削除";
+"Show" = "表示";
+"Hide" = "非表示";
+"Notify" = "通知"
+
+"Title" = "タイトル";
+"Info" = "情報";
+"Version" = "バージョン";
+"Request" = "ご意見・不具合報告";
+"WebSite" = "Webサイト";
+"WriteReview" = "レビューを書く";
+"OtherApps" = "他のアプリ";
+"Can't Send e-mail." = "メールを送信できません。";
+"Failed to send e-mail." = "メールの送信に失敗しました。";
+
+"https://rikkicat.wordpress.com/ios-apps-j/", @"https://rikkicat.wordpress.com/ios-apps-j/");
+"https://itunes.apple.com/jp/app/fa-yaochekka/id814832089?l=ja&ls=1&mt=8" = "https://itunes.apple.com/jp/app/fa-yaochekka/id814832089?l=ja&ls=1&mt=8";
+"https://itunes.apple.com/jp/developer/rikki-systems-inc/id497295364" = "https://itunes.apple.com/jp/developer/rikki-systems-inc/id497295364";
+"https://itunes.apple.com/jp/developer/rikki-systems-inc/id497295364" = "https://itunes.apple.com/jp/developer/rikki-systems-inc/id497295364";
