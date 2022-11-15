@@ -36,7 +36,6 @@
     
     [[UserDefaults sharedManager] initialize];
     
-//    [Fabric with:@[[Crashlytics class]]];
     [SKStoreReviewController requestReview];
     return YES;
 }
