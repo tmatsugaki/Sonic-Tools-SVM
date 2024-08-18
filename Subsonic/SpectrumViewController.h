@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2022  Takuji Matsugaki
+    Copyright (C) 2017-2024  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,10 +17,14 @@
  */
 //
 //  SpectrumViewController.h
+//
 
 #import <UIKit/UIKit.h>
 #import <AudioToolbox/AudioToolbox.h>
 #import "definitions.h"
+#if (ADMOB == ON)
+#import <GoogleMobileAds/GADBannerView.h>
+#endif
 #import "SubsonicViewController.h"
 #import "FFTView.h"
 
@@ -47,20 +51,26 @@
 enum {
     kSpectrumFFT,
     kSpectrumRTA,
-    kSpectrumRTA1_3,
-    kSpectrumRTA1_6,
-    kSpectrumRTA1_12,
+    kSpectrumRTA1by3,
+    kSpectrumRTA1by6,
+    kSpectrumRTA1by12,
     kSpectrogram,
     kSpectrumLast
 };
 
+#if SMART_REFRESH
+#define REFRESH_INTERVAL        0.1   // STD_REFRESH_INTERVALの倍
+#else
 #define REFRESH_INTERVAL        STD_REFRESH_INTERVAL    // 0.05
+#endif
 
 @interface SpectrumViewController : SubsonicViewController <FFTViewProtocol> {
     BOOL fftInitialized;
 }
 @property (strong, nonatomic) IBOutlet FFTView *fftView;
+#if AUTO_LAYOUT
 @property (assign, nonatomic) IBOutlet NSLayoutConstraint *contentConstraint;
+#endif
 @property (assign, nonatomic) BOOL freeze;
 @property (strong, nonatomic) NSTimer *refreshTimer;
 @end

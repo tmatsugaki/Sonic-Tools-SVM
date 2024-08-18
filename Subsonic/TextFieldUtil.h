@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2022  Takuji Matsugaki
+    Copyright (C) 2017-2024  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,10 +17,6 @@
  */
 //
 //  TextFieldUtil.h
-//  Subsonic
-//
-//  Created by matsu on 2014/02/06.
-//  Copyright (c) 2014年 Rikki Systems Inc. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>

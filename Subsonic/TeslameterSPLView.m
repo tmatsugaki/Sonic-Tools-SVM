@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2022  Takuji Matsugaki
+    Copyright (C) 2017-2024  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
  */
 //
 //  TeslameterSPLView.m
+//
 
 #import <Accelerate/Accelerate.h>
 #import "ColorUtil.h"
@@ -742,6 +743,62 @@
                         rect:(CGRect)rect
 {
     return;
+    // このグラフにスクロールインジケーターは似合わない。
+    if (scrollBarVisibility) {
+#if 1
+        CGRect frame = CGGraphRectMake(rect);
+        CGFloat org_x = frame.origin.x;
+        CGFloat org_y = frame.origin.y;
+        CGFloat width = frame.size.width;
+        CGFloat height = frame.size.height;
+        
+        if (_pinchScaleX > 0 && _panOffset.x <= 0) {
+            CGFloat hpos = org_x + 5.0;
+            CGFloat vpos = org_y + height - 5.0;
+            
+            CGContextSetLineWidth(context, kScrollBarLineWidth);
+            CGContextSetStrokeColorWithColor(context, [ColorUtil vfdOn].CGColor);
+            
+            CGContextBeginPath(context);
+            CGContextMoveToPoint(context, hpos - _panOffset.x / _pinchScaleX, vpos);
+            CGContextAddLineToPoint(context, hpos - _panOffset.x / _pinchScaleX + width / _pinchScaleX - 15.0, vpos);
+            CGContextStrokePath(context);
+        }
+        if (_pinchScaleY > 0 && _panOffset.y <= 0) {
+            CGFloat hpos = org_x + width - 5.0;
+            CGFloat vpos = org_y + 5.0;
+            
+            CGContextSetLineWidth(context, kScrollBarLineWidth);
+            CGContextSetStrokeColorWithColor(context, [ColorUtil vfdOn].CGColor);
+            
+            CGContextBeginPath(context);
+            CGContextMoveToPoint(context, hpos, vpos - _panOffset.y / _pinchScaleY);
+            CGContextAddLineToPoint(context, hpos, vpos - _panOffset.y / _pinchScaleY + height / _pinchScaleY - 15.0);
+            CGContextStrokePath(context);
+        }
+#else
+        if (_pinchScaleX > 0 && _panOffset.x <= 0) {
+            CGFloat hpos = self.frame.origin.x;
+            CGFloat width = self.frame.size.width;
+            CGFloat leadingRatio = (hpos - _panOffset.x / _pinchScaleX) / width;
+            CGFloat contentRatio = (hpos - _panOffset.x / _pinchScaleX + width / _pinchScaleX) / width;
+            
+            _hScrollBar.leadingRatio = leadingRatio;
+            _hScrollBar.contentRatio = contentRatio;
+            [_hScrollBar setNeedsDisplay];
+        }
+        if (_pinchScaleY > 0 && _panOffset.y <= 0) {
+            CGFloat vpos = self.frame.origin.y;
+            CGFloat height = self.frame.size.height;
+            CGFloat leadingRatio = (vpos - _panOffset.y / _pinchScaleY) / height;
+            CGFloat contentRatio = (vpos - _panOffset.y / _pinchScaleY + height / _pinchScaleY) / height;
+            
+            _vScrollBar.leadingRatio = leadingRatio;
+            _vScrollBar.contentRatio = contentRatio;
+            [_vScrollBar setNeedsDisplay];
+        }
+#endif
+    }
 }
 
 - (void) hideScrollIndicator {

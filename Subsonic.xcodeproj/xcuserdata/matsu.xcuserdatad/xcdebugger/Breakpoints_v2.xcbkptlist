@@ -29,8 +29,7 @@
                   continueAfterRunningActions = "No"
                   symbolName = "malloc_error_break"
                   moduleName = "libsystem_malloc.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  offsetFromSymbolStart = "0">
+                  usesParentBreakpointCondition = "Yes">
                </Location>
             </Locations>
          </BreakpointContent>
@@ -108,8 +107,8 @@
             timestampString = "589340643.157856"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "144"
-            endingLineNumber = "144"
+            startingLineNumber = "157"
+            endingLineNumber = "157"
             landmarkName = "spectrumStrongestFrequencyHZ(buffer, fftHelper, frameSize, maxIndexRet, freqValue)"
             landmarkType = "9">
          </BreakpointContent>
@@ -125,8 +124,8 @@
             timestampString = "589340643.1582"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "147"
-            endingLineNumber = "147"
+            startingLineNumber = "160"
+            endingLineNumber = "160"
             landmarkName = "spectrumStrongestFrequencyHZ(buffer, fftHelper, frameSize, maxIndexRet, freqValue)"
             landmarkType = "9">
          </BreakpointContent>
@@ -142,9 +141,9 @@
             timestampString = "571797837.549512"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "58"
-            endingLineNumber = "58"
-            landmarkName = "-didReceiveMemoryWarning"
+            startingLineNumber = "71"
+            endingLineNumber = "71"
+            landmarkName = "-canResignFirstResponder"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

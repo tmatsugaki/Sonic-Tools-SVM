@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2022  Takuji Matsugaki
+    Copyright (C) 2017-2024  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
  */
 //
 //  MainViewController.m
+//
 
 #import <AVFoundation/AVAudioSession.h>
 #import "MainViewController.h"
@@ -24,8 +25,11 @@
 #import "FFTView.h"
 #import "UserDefaults.h"
 
+//#define kSpectrumAgcKey         @"SpectrumAGC"
+#if (ALLOW_EDIT_TABBAR == ON)
 #define kSelectedTabIndexKey        @"SelectedTabIndex"
 #define kTabbarTagOrderKey          @"TabbarTagOrder"
+#endif
 
 void dummyAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData) {
 }
@@ -86,6 +90,7 @@ void dummyAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData) {
         DEBUG_LOG(@"%@", self.customizableViewControllers);
         DEBUG_LOG(@"%@", self.viewControllers);
 
+#if (ALLOW_EDIT_TABBAR == ON)
         NSMutableArray *newViewControllers = [[NSMutableArray alloc] init];
 
         if (self.customizableViewControllers) {
@@ -103,8 +108,12 @@ void dummyAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData) {
             [newViewControllers addObjectsFromArray:candidateViewControllers];
             [self setViewControllers:newViewControllers];
         }
+#endif
+
+#if (HOLD_SELECTED_TABBAR_ITEM == ON)
         DEBUG_LOG(@"%lu", (unsigned long)[self tabIndexToSelect]);
         [self setSelectedIndex:[self tabIndexToSelect]];
+#endif
         lastItem = self.tabBar.selectedItem;
     }
 }
@@ -135,19 +144,24 @@ void dummyAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData) {
 }
 */
 
+#if (HOLD_SELECTED_TABBAR_ITEM == ON)
 - (NSUInteger) tabIndexToSelect;
 {
     return [[NSUserDefaults standardUserDefaults] integerForKey:kSelectedTabIndexKey]; // defaults to zero
 }
+#endif
 
 #pragma mark - UITabBarDelegate
+#if (HOLD_SELECTED_TABBAR_ITEM == ON)
 - (void)tabBar:(UITabBar *)tabBar didSelectItem:(UITabBarItem *)item {
     DEBUG_LOG(@"%s %lu", __func__, (unsigned long)self.selectedIndex);
 
     NSUInteger index = [self.tabBar.items indexOfObject:item];
     [[NSUserDefaults standardUserDefaults] setInteger:(index != NSNotFound ? index : 0) forKey:kSelectedTabIndexKey];
 }
+#endif
 
+#if (ALLOW_EDIT_TABBAR == ON)
 - (void)tabBar:(UITabBar *)tabBar didEndCustomizingItems:(NSArray<UITabBarItem *> *)items
        changed:(BOOL)changed {
     NSArray *tabBarTagOrder = [items valueForKey:@"tag"];
@@ -157,6 +171,7 @@ void dummyAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData) {
         [[NSUserDefaults standardUserDefaults] setObject:tabBarTagOrder forKey:kTabbarTagOrderKey];
     }
 }
+#endif
 
 #pragma mark - UITabBarControllerDelegate
 

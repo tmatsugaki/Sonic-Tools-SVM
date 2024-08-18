@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2022  Takuji Matsugaki
+    Copyright (C) 2017-2024  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
  */
 //
 //  AccelometerSpectrumViewController.m
+//
 
 #import "AccelometerSpectrumViewController.h"
 #include "FFTHelper.hh"
@@ -29,6 +30,8 @@ Float32 accelo_spectrum_z_buffer[ACCELO_SPECTRUM_FFT_SIZE];
 
 #import "FFTHelper.hh"
 
+#undef SMART_REFRESH
+
 /// Nyquist Maximum Frequency
 const Float32 acceloSpectrumNyquistMaxFreq = ACCELO_SPECTRUM_SAMPLE_RATE/2.0;
 
@@ -36,7 +39,7 @@ BOOL weakAccelometer = NO;
 NSDate *accelSpectrumFlushDate = nil;
 
 /// caculates HZ value for specified index from a FFT bins vector
-Float32 acceloSpectrumFrequencyHerzValue(long frequencyIndex, long fftVectorSize, Float32 nyquistFrequency ) {
+Float32 acceloSpectrumFrequencyHerzValue(long frequencyIndex, long fftVectorSize, Float32 nyquistFrequency) {
     return ((Float32)frequencyIndex/(Float32)fftVectorSize) * nyquistFrequency;
 }
 
@@ -115,6 +118,30 @@ BOOL *accelometer_spectrum_freeze_p = nil;
                 DEBUG_LOG(@"maxHZValue:%g", maxHZValue);
             }
             resultIndex = [self getResult:maxHZIndex maxHZValue:maxHZValue maxHZ:maxHZ fftResult:fftResult];
+            if ([[NSFileManager defaultManager] fileExistsAtPath:ACCELO_SPECTRUM_FILE_PATH]) {
+                NSArray *arr = [NSArray arrayWithContentsOfFile:ACCELO_SPECTRUM_FILE_PATH];
+                NSUInteger i = 0;
+                NSData *data = nil;
+                
+                maxHZIndex[0] = ((NSNumber *) arr[i++]).longValue;
+                maxHZIndex[1] = ((NSNumber *) arr[i++]).longValue;
+                maxHZIndex[2] = ((NSNumber *) arr[i++]).longValue;
+                maxHZValue[0] = ((NSNumber *) arr[i++]).floatValue;
+                maxHZValue[1] = ((NSNumber *) arr[i++]).floatValue;
+                maxHZValue[2] = ((NSNumber *) arr[i++]).floatValue;
+                maxHZ[0] = ((NSNumber *) arr[i++]).floatValue;
+                maxHZ[1] = ((NSNumber *) arr[i++]).floatValue;
+                maxHZ[2] = ((NSNumber *) arr[i++]).floatValue;
+                data = (NSData *) arr[i++];
+                // FFTはリングバッファでなく1行分のデータをブロックコピー
+                memcpy(fftResult[0], [data bytes], sizeof(Float32) * ACCELO_SPECTRUM_FFT_SIZE/2);
+                data = (NSData *) arr[i++];
+                // FFTはリングバッファでなく1行分のデータをブロックコピー
+                memcpy(fftResult[1], [data bytes], sizeof(Float32) * ACCELO_SPECTRUM_FFT_SIZE/2);
+                data = (NSData *) arr[i++];
+                // FFTはリングバッファでなく1行分のデータをブロックコピー
+                memcpy(fftResult[2], [data bytes], sizeof(Float32) * ACCELO_SPECTRUM_FFT_SIZE/2);
+            }
             [accelometer_spectrum_view memmove:accelometer_spectrum_view.fftDataX
                                           srcX:&fftResult[0][0]
                                           dstY:accelometer_spectrum_view.fftDataY
@@ -226,6 +253,51 @@ BOOL *accelometer_spectrum_freeze_p = nil;
                                             accelo_spectrum_x_buffer[index] = x;
                                             accelo_spectrum_y_buffer[index] = y;
                                             accelo_spectrum_z_buffer[index] = z;
+#if SMART_REFRESH
+                                            if ((accelometerSpectrumBufferFillIndex % ACCELO_SPECTRUM_FFT_SIZE) == ACCELO_SPECTRUM_FFT_SIZE - 1)
+                                            {
+                                                if (*accelometer_spectrum_freeze_p == NO) {
+                                                    unsigned long maxHZIndex[3];
+                                                    Float32 maxHZValue[3];
+                                                    Float32 maxHZ[3];
+                                                    static Float32 fftResult[3][ACCELO_SPECTRUM_FFT_SIZE/2];
+                                                    NSUInteger resultIndex;
+                                                    if (weakAccelometer) {
+                                                        DEBUG_LOG(@"maxHZValue:%g", maxHZValue);
+                                                    }
+                                                    resultIndex = [self getResult:maxHZIndex maxHZValue:maxHZValue maxHZ:maxHZ fftResult:fftResult];
+                                                    
+                                                    Float32 *srcX = &fftResult[0][0];
+                                                    Float32 *srcY = &fftResult[1][0];
+                                                    Float32 *srcZ = &fftResult[2][0];
+                                                    NSUInteger mIndex = maxHZIndex[resultIndex];
+                                                    Float32 mHZ = maxHZ[resultIndex];
+                                                    Float32 mHZValue = maxHZValue[resultIndex];
+                                                    
+                                                    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+                                                        [accelometer_spectrum_view memmove:accelometer_spectrum_view.fftDataX
+                                                                                      srcX:srcX
+                                                                                      dstY:accelometer_spectrum_view.fftDataY
+                                                                                      srcY:srcY
+                                                                                      dstZ:accelometer_spectrum_view.fftDataZ
+                                                                                      srcZ:srcZ
+                                                                                       len:ACCELO_SPECTRUM_FFT_SIZE/2];
+                                                        accelometer_spectrum_view.maxIndex = mIndex;
+                                                        accelometer_spectrum_view.maxHZ = mHZ;
+                                                        if (mHZ == 1.0) {
+                                                            oneHzCounter++;
+                                                        }
+                                                        accelometer_spectrum_view.maxHZValue = mHZValue ? mHZValue : 0.0;  // 0G とする。
+                                                        flushCounter++;
+                                                        if (flushCounter == 10 && flushCounter == oneHzCounter)
+                                                        {// Accelerometer seems to be dull.
+                                                            weakAccelometer = YES;
+                                                        }
+                                                    });
+                                                }
+                                            }
+                                            accelometerSpectrumBufferFillIndex++;
+#else
                                             if ((accelometerSpectrumBufferFillIndex % ACCELO_SPECTRUM_FFT_SIZE) == ACCELO_SPECTRUM_FFT_SIZE - 1)
                                             {
                                                 if (*accelometer_spectrum_freeze_p == NO) {
@@ -239,6 +311,53 @@ BOOL *accelometer_spectrum_freeze_p = nil;
                                                         DEBUG_LOG(@"maxHZValue:%g", maxHZValue);
                                                     }
                                                     resultIndex = [self getResult:maxHZIndex maxHZValue:maxHZValue maxHZ:maxHZ fftResult:fftResult];
+#if (SAVE_DUMMY_DATA && !TARGET_IPHONE_SIMULATOR)
+                                                    [[NSFileManager defaultManager] removeItemAtPath:ACCELO_SPECTRUM_FILE_PATH error:nil];
+                                                    if ([[NSFileManager defaultManager] fileExistsAtPath:ACCELO_SPECTRUM_FILE_PATH] == NO) {
+                                                        NSMutableArray *arr = [[NSMutableArray alloc] init];
+                                                        
+                                                        [arr addObject:[NSNumber numberWithLong:maxHZIndex[0]]];
+                                                        [arr addObject:[NSNumber numberWithLong:maxHZIndex[1]]];
+                                                        [arr addObject:[NSNumber numberWithLong:maxHZIndex[2]]];
+                                                        [arr addObject:[NSNumber numberWithFloat:maxHZValue[0]]];
+                                                        [arr addObject:[NSNumber numberWithFloat:maxHZValue[1]]];
+                                                        [arr addObject:[NSNumber numberWithFloat:maxHZValue[2]]];
+                                                        [arr addObject:[NSNumber numberWithFloat:maxHZ[0]]];
+                                                        [arr addObject:[NSNumber numberWithFloat:maxHZ[1]]];
+                                                        [arr addObject:[NSNumber numberWithFloat:maxHZ[2]]];
+                                                        [arr addObject:[NSData dataWithBytes:fftResult[0] length:sizeof(Float32) * ACCELO_SPECTRUM_FFT_SIZE/2]];
+                                                        [arr addObject:[NSData dataWithBytes:fftResult[1] length:sizeof(Float32) * ACCELO_SPECTRUM_FFT_SIZE/2]];
+                                                        [arr addObject:[NSData dataWithBytes:fftResult[2] length:sizeof(Float32) * ACCELO_SPECTRUM_FFT_SIZE/2]];
+                                                        [arr writeToFile:ACCELO_SPECTRUM_FILE_PATH atomically:YES];
+                                                    }
+                                                    //#elif (TARGET_IPHONE_SIMULATOR)
+#elif (LOAD_DUMMY_DATA && TARGET_IPHONE_SIMULATOR)
+// このパスは通過しない。
+                                                    if ([[NSFileManager defaultManager] fileExistsAtPath:ACCELO_SPECTRUM_FILE_PATH]) {
+                                                        NSArray *arr = [NSArray arrayWithContentsOfFile:ACCELO_SPECTRUM_FILE_PATH];
+                                                        NSUInteger i = 0;
+                                                        NSData *data = nil;
+                                                        
+                                                        maxHZIndex[0] = ((NSNumber *) arr[i++]).longValue;
+                                                        maxHZIndex[1] = ((NSNumber *) arr[i++]).longValue;
+                                                        maxHZIndex[2] = ((NSNumber *) arr[i++]).longValue;
+                                                        maxHZValue[0] = ((NSNumber *) arr[i++]).floatValue;
+                                                        maxHZValue[1] = ((NSNumber *) arr[i++]).floatValue;
+                                                        maxHZValue[2] = ((NSNumber *) arr[i++]).floatValue;
+                                                        maxHZ[0] = ((NSNumber *) arr[i++]).floatValue;
+                                                        maxHZ[1] = ((NSNumber *) arr[i++]).floatValue;
+                                                        maxHZ[2] = ((NSNumber *) arr[i++]).floatValue;
+                                                        data = (NSData *) arr[i++];
+                                                        // FFTはリングバッファでなく1行分のデータをブロックコピー
+                                                        memcpy(fftResult[0], [data bytes], sizeof(Float32) * ACCELO_SPECTRUM_FFT_SIZE/2);
+                                                        data = (NSData *) arr[i++];
+                                                        // FFTはリングバッファでなく1行分のデータをブロックコピー
+                                                        memcpy(fftResult[1], [data bytes], sizeof(Float32) * ACCELO_SPECTRUM_FFT_SIZE/2);
+                                                        data = (NSData *) arr[i++];
+                                                        // FFTはリングバッファでなく1行分のデータをブロックコピー
+                                                        memcpy(fftResult[2], [data bytes], sizeof(Float32) * ACCELO_SPECTRUM_FFT_SIZE/2);
+                                                    }
+#endif
 
                                                     [accelometer_spectrum_view memmove:accelometer_spectrum_view.fftDataX
                                                                                   srcX:&fftResult[0][0]
@@ -272,6 +391,7 @@ BOOL *accelometer_spectrum_freeze_p = nil;
                                                 }
                                             }
                                             accelometerSpectrumBufferFillIndex++;
+#endif
                                         }];
 }
 
@@ -296,7 +416,7 @@ BOOL *accelometer_spectrum_freeze_p = nil;
 - (void) viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
 
-#if LOAD_DUMMY_DATA
+#if (SMART_REFRESH || LOAD_DUMMY_DATA)
     self.refreshTimer = [NSTimer scheduledTimerWithTimeInterval:REFRESH_INTERVAL target:self selector:@selector(postUpdate) userInfo:nil repeats:YES];
 #endif
     self.accelometerSpectrumView.header.text = @"";
@@ -360,6 +480,15 @@ BOOL *accelometer_spectrum_freeze_p = nil;
         self.accelometerSpectrumView.header.text = [NSString stringWithFormat:@"%@[%@]", windowFunctionTitle, windowFunctionName];
         [self performSelector:@selector(setHeaderMessage:) withObject:@"" afterDelay:10];
     }
+#if (AUTO_LAYOUT && ADMOB)
+    // AdMob のセットアップ準備
+    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
+        _contentConstraint.constant = CONSTRAINT_MAGIC + [self getAdmobAdHeight];
+        DEBUG_LOG(@"%g", _contentConstraint.constant);
+    } else {
+        _contentConstraint.constant = CONSTRAINT_MAGIC;
+    }
+#endif
 }
 
 - (void) setHeaderMessage:(NSString *)message {
@@ -374,6 +503,14 @@ BOOL *accelometer_spectrum_freeze_p = nil;
     
     _freeze = NO;
     [self setLedMeasuring:_freeze == NO];
+
+#if (ADMOB == ON)
+    // AdMob のセットアップ
+    [self setupAdmob:adMobUnitID4];
+    if (self.banner.adSize.size.width != self.view.frame.size.width) {
+        [self setupAdmobFor_iPad:adMobUnitID4];
+    }
+#endif
 }
 
 - (void) viewWillDisappear:(BOOL)animated {
@@ -405,7 +542,10 @@ BOOL *accelometer_spectrum_freeze_p = nil;
 
     // maintainPinch を実行する。
     [self.accelometerSpectrumView setNeedsLayout];
+    // バナービューの表示制御
+#if AUTO_LAYOUT
     _contentConstraint.constant = CONSTRAINT_MAGIC;
+#endif
 }
 #else
 - (void)viewWillTransitionToSize:(CGSize)size
@@ -415,7 +555,10 @@ BOOL *accelometer_spectrum_freeze_p = nil;
 
     // maintainPinch を実行する。
     [self.accelometerSpectrumView setNeedsLayout];
+    // バナービューの表示制御
+#if AUTO_LAYOUT
     _contentConstraint.constant = CONSTRAINT_MAGIC;
+#endif
 }
 #endif
 
@@ -424,6 +567,17 @@ BOOL *accelometer_spectrum_freeze_p = nil;
     
     // maintainPinch を実行する。
     [self.accelometerSpectrumView setNeedsLayout];
+
+#if (AUTO_LAYOUT && ADMOB)
+    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
+        _contentConstraint.constant = CONSTRAINT_MAGIC + [self getAdmobAdHeight];
+    }
+#endif
+
+#if (ADMOB == ON)
+    // AdMob のセットアップ
+    [self setupAdmobFor_iPad:adMobUnitID4];
+#endif
 }
 #else
 - (void) traitCollectionDidChange: (UITraitCollection *) previousTraitCollection {
@@ -431,6 +585,17 @@ BOOL *accelometer_spectrum_freeze_p = nil;
 
     // maintainPinch を実行する。
     [self.accelometerSpectrumView setNeedsLayout];
+    
+#if (AUTO_LAYOUT && ADMOB)
+    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
+        _contentConstraint.constant = CONSTRAINT_MAGIC + [self getAdmobAdHeight];
+    }
+#endif
+    
+#if (ADMOB == ON)
+    // AdMob のセットアップ
+    [self setupAdmobFor_iPad:adMobUnitID4];
+#endif
 }
 #endif
 

@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2022  Takuji Matsugaki
+    Copyright (C) 2017-2024  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
  */
 //
 //  FFTView.h
+//
 
 #import <UIKit/UIKit.h>
 #import "definitions.h"
@@ -27,11 +28,20 @@
 /*
  * FFT サンプリングレートなど
  */
+#if (FFT_IMPROVE == OFF)
+//#define FFT_FRAMESIZE               512.0       // 512.0 だと AU の rederer か何かでバッファのアンダーランでもあるのか落ちる！！
+#else
+// 正
+//#define FFT_FRAMESIZE               2048.0      // 512.0 を 2048 にして CPU の負荷を低減したところ安定化した！？ TAK on Jun 5th, 2017
+#endif
+
 #define kOutputBus                  0
 #define kInputBus                   1
 /*
  * 描画用バッファ
  */
+#define DISPOSE_SUBSONIC            1
+
 @protocol FFTViewProtocol <NSObject>
 - (void) singleTapped;
 - (void) setFreezeMeasurement:(BOOL)yesNo;

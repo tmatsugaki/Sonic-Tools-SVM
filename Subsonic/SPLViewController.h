@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2022  Takuji Matsugaki
+    Copyright (C) 2017-2024  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,10 +17,14 @@
  */
 //
 //  SPLViewController.h
+//
 
 #import <UIKit/UIKit.h>
 #import "definitions.h"
 #import "SPLView.h"
+#if (ADMOB == ON)
+#import <GoogleMobileAds/GADBannerView.h>
+#endif
 #import "SubsonicViewController.h"
 
 #define kSPLHideRulerKey        @"SPLHideRuler"
@@ -42,7 +46,9 @@
 @interface SPLViewController : SubsonicViewController <SPLViewProtocol> {
 }
 @property (strong, nonatomic) IBOutlet SPLView *splView;
+#if AUTO_LAYOUT
 @property (assign, nonatomic) IBOutlet NSLayoutConstraint *contentConstraint;
+#endif
 @property (assign, nonatomic) BOOL freeze;
 @property (strong, nonatomic) NSTimer *refreshTimer;
 

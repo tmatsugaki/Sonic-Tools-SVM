@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2022  Takuji Matsugaki
+    Copyright (C) 2017-2024  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
  */
 //
 //  SpectrumViewController.m
+//
 
 #import "Settings.h"
 #import "SpectrumViewController.h"
@@ -40,7 +41,7 @@
 //const Float32 spectrumNyquistMaxFreq = FFT_SAMPLE_RATE/2.0;
 
 /// caculates HZ value for specified index from a FFT bins vector
-Float32 spectrumFrequencyHerzValue(long frequencyIndex, long fftVectorSize, Float32 nyquistFrequency ) {
+Float32 spectrumFrequencyHerzValue(long frequencyIndex, long fftVectorSize, Float32 nyquistFrequency) {
     return ((Float32)frequencyIndex/(Float32)fftVectorSize) * nyquistFrequency;
 }
 
@@ -59,7 +60,6 @@ static void initializeFFTAccumulator() {
     fftAccumulator = (Float32 *) malloc([UserDefaults sharedManager].numChannels * sizeof(Float32)*[UserDefaults sharedManager].fftPoints);
     fftAccumulatorFillIndex = 0;
 }
-
 static void destroyFFTAccumulator() {
     if (fftAccumulator!=NULL) {
         free(fftAccumulator);
@@ -178,12 +178,39 @@ void SpectrumAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
         //take only data from 1 channel
         Float32 zero = 0.0;
         //    NSUInteger mod = FFT_FFT_POINTS / 8192;
-//        static unsigned long long counter = 0;
+        static unsigned long long counter = 0;
+#pragma unused(counter)
+
         /* Performs the following operation:
          Adds scalar *B to each element of vector A and stores the result in the corresponding element of vector C.*/
         vDSP_vsadd(buffer, 2, &zero, buffer, 1, frameSize * numChannels);   // ここで落ちるのはメモリー不足？
         
         if (fftAccumulateFrames(buffer, frameSize)) {
+#if SMART_REFRESH
+            if (*spectrum_freeze_p == NO) {
+                //            DEBUG_LOG(@"FFT");
+                // 負荷によってはフリッカーが出るので、dispatch_async 辞めた。
+                //            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                //=========================================
+                unsigned long maxHZIndex = NSNotFound;
+                Float32 maxHZValue = 0;
+                Float32 maxHZ = spectrumStrongestFrequencyHZ(fftAccumulator, &specrumFftConverter, fftPoints, &maxHZIndex, &maxHZValue);
+                
+                spectrum_view.maxIndex = maxHZIndex;
+                spectrum_view.maxHZ = maxHZ;
+                spectrum_view.maxHZValue = maxHZValue ? maxHZValue : -PIANISSIMO;  // 最大120dB とする。
+                // FFTはリングバッファでなく1行分のデータをブロックコピー
+#if 0
+                memcpy(spectrum_view.fftData, specrumFftConverter.outFFTData, sizeof(Float32)*fftPoints/2);
+#else
+                [spectrum_view setFFTData:specrumFftConverter.outFFTData];
+#endif
+                emptyFFTAccumulator(); //empty the accumulator when finished
+                //            });
+            } else {
+                emptyFFTAccumulator(); //empty the accumulator when finished
+            }
+#else
             if (*spectrum_freeze_p == NO) {
                 //            DEBUG_LOG(@"FFT");
                 //=========================================
@@ -212,6 +239,7 @@ void SpectrumAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
                 DEBUG_LOG(@"%s レイテンシーが小さすぎ！", __func__);
             }
             emptyFFTAccumulator(); //empty the accumulator when finished
+#endif
         }
         memset(buffer, 0, sizeof(Float32)*frameSize * numChannels);
     }
@@ -285,11 +313,34 @@ void SpectrumAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
     // 最新のデフォルト46msとなっている。
     NSError *setPreferenceError = nil;
     
+#if 0
+    NSNumber *currentValue = [[NSUserDefaults standardUserDefaults] objectForKey:kLatencyKey];
+    
+    if (currentValue) {
+        switch (currentValue.integerValue) {
+            case 1: // 高速(5ms)
+                [[AVAudioSession sharedInstance] setPreferredIOBufferDuration:AU_BUFFERING_FAST_LATENCY error:&setPreferenceError];
+                break;
+//            case 2: // 最高速(1ms)
+//                [[AVAudioSession sharedInstance] setPreferredIOBufferDuration:AU_BUFFERING_FASTEST_LATENCY error:&setPreferenceError];
+//                break;
+            default: // デフォルト(46ms)
+                [[AVAudioSession sharedInstance] setPreferredIOBufferDuration:AU_BUFFERING_SLOW_LATENCY error:&setPreferenceError];
+                break;
+        }
+    } else {
+        [[AVAudioSession sharedInstance] setPreferredIOBufferDuration:AU_BUFFERING_SLOW_LATENCY error:&setPreferenceError];
+    }
+#else
     // いつも高速(5ms)
     [[AVAudioSession sharedInstance] setPreferredIOBufferDuration:AU_BUFFERING_FAST_LATENCY error:&setPreferenceError];
+#endif
     DEBUG_LOG(@"preferredIOBufferDuration=%g", [[AVAudioSession sharedInstance] preferredIOBufferDuration]);
 #endif
 
+#if SMART_REFRESH
+    self.refreshTimer = [NSTimer scheduledTimerWithTimeInterval:REFRESH_INTERVAL target:self selector:@selector(postUpdate) userInfo:nil repeats:YES];
+#endif
     UIViewController *viewController = [[self navigationController] topViewController];
     if (viewController) {
         DEBUG_LOG(@"");
@@ -328,6 +379,20 @@ void SpectrumAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
     self.fftView.header.text = @"";
     self.fftView.windowFunctionButton.layer.masksToBounds = YES;
     self.fftView.windowFunctionButton.layer.cornerRadius = 4.0;
+#if (AVERAGE == ON)
+    self.fftView.averageText.layer.masksToBounds = YES;
+    self.fftView.averageText.layer.cornerRadius = 4.0;
+#else
+//    self.fftView.averageLabel.hidden = YES;
+//    self.fftView.averageText.hidden = YES;
+//    self.fftView.averageSegment.hidden = YES;
+#endif
+    // AGC のデフォルト値を反映する。
+//    if ([[NSUserDefaults standardUserDefaults] boolForKey:kSpectrumAgcKey]) {
+//        [self.fftView.agcSwitch setImage:[UIImage imageNamed:@"agcON"] forState:UIControlStateNormal];
+//    } else {
+//        [self.fftView.agcSwitch setImage:[UIImage imageNamed:@"agcOFF"] forState:UIControlStateNormal];
+//    }
     
     [_fftView maintainControl:spectrumMode];
     // ピーク値をクリアする。
@@ -362,7 +427,8 @@ void SpectrumAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
 
     NSString *windowFunctionTitle = @"";
     NSString *windowFunctionName = @"";
-//    NSString *latencyTitle = @"";
+    NSString *latencyTitle = @"";
+#pragma unused(latencyTitle)
     NSString *latencyName = @"";
 
     for (NSDictionary *prefItem in rootPrefSpecifierArray)
@@ -391,11 +457,20 @@ void SpectrumAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
         self.fftView.header.text = [NSString stringWithFormat:@"%@[%@]", windowFunctionTitle, windowFunctionName];
         [self performSelector:@selector(setHeaderMessage:) withObject:@"" afterDelay:10];
     }
+#if (AUTO_LAYOUT && ADMOB)
+    // AdMob のセットアップ準備
+    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
+        _contentConstraint.constant = CONSTRAINT_MAGIC + [self getAdmobAdHeight];
+        DEBUG_LOG(@"%g", _contentConstraint.constant);
+    } else {
+        _contentConstraint.constant = CONSTRAINT_MAGIC;
+    }
+#endif
     switch (spectrumMode) {
         case kSpectrumRTA:
-        case kSpectrumRTA1_3:
-        case kSpectrumRTA1_6:
-        case kSpectrumRTA1_12:
+        case kSpectrumRTA1by3:
+        case kSpectrumRTA1by6:
+        case kSpectrumRTA1by12:
             [_fftView.colorLabel setText:NSLocalizedString(@"RTA Color", @"")];
             break;
             
@@ -408,6 +483,13 @@ void SpectrumAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
     [_fftView.windowFunctionSegment setTitle:NSLocalizedString(@"Hamming", @"ハミング") forSegmentAtIndex:1];
     [_fftView.windowFunctionSegment setTitle:NSLocalizedString(@"Hanning", @"ハニング") forSegmentAtIndex:2];
     [_fftView.windowFunctionSegment setTitle:NSLocalizedString(@"Blackman", @"ブラックマン") forSegmentAtIndex:3];
+#if (AVERAGE == ON)
+//    [_fftView.averageLabel setText:NSLocalizedString(@"RTA Average", @"")];
+//    [_fftView.averageSegment setTitle:NSLocalizedString(@"None", @"") forSegmentAtIndex:0];
+//    [_fftView.averageSegment setTitle:NSLocalizedString(@"Fast", @"") forSegmentAtIndex:1];
+//    [_fftView.averageSegment setTitle:NSLocalizedString(@"Slow", @"") forSegmentAtIndex:2];
+//    [_fftView.averageSegment setTitle:NSLocalizedString(@"Infinite", @"") forSegmentAtIndex:3];
+#endif
     [_fftView.gainLabel setText:NSLocalizedString(@"Mic Gain", @"")];
     [_fftView.noiseReductionLabel setText:NSLocalizedString(@"Noise Reduction", @"")];
     [_fftView.typicalButton setTitle:NSLocalizedString(@"Typical Settings", @"") forState:UIControlStateNormal];
@@ -437,6 +519,15 @@ void SpectrumAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
         MoAudio::m_callback = SpectrumAudioCallback;
     }
     DEBUG_LOG(@"%g < %g", _fftView.frame.origin.y, self.navigationController.navigationBar.frame.size.height + self.bannerView.frame.origin.y + self.bannerView.frame.size.height);
+
+#if (ADMOB == ON)
+    // AdMob のセットアップ
+    [self setupAdmob:adMobUnitID1];
+    if (self.banner.adSize.size.width != self.view.frame.size.width) {
+        [self setupAdmobFor_iPad:adMobUnitID1];
+    }
+    DEBUG_LOG(@"%s %g", __func__, spectrum_view.frame.origin.y);
+#endif
 }
 
 - (void) viewWillDisappear:(BOOL)animated {
@@ -460,8 +551,37 @@ void SpectrumAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
 //    if (result)
     {// MoAudio::init は MainViewController で一回だけやる。
         MoAudio::stop();
-        result = MoAudio::start( SpectrumAudioCallback );
+        result = MoAudio::start( SpectrumAudioCallback);
         if (result) {
+#if 0
+            OSStatus stat;
+#if MEASUREMENT
+            // AGC ON/計測モードを選択可能
+            if ([[NSUserDefaults standardUserDefaults] boolForKey:kSpectrumAgcKey])
+            {// マイクの AGC をオンにする。
+//                UInt32 mode = kAudioSessionMode_Default; いつも計測にする！！
+                UInt32 mode = kAudioSessionMode_Measurement;
+                stat = AudioSessionSetProperty(kAudioSessionProperty_Mode, sizeof(mode), &mode);
+            } else
+            {// マイクの AGC をオフにする。 <AudioToolbox/AudioToolbox.h>
+#if 1
+                UInt32 mode = kAudioSessionMode_Measurement;
+                stat = AudioSessionSetProperty(kAudioSessionProperty_Mode, sizeof(mode), &mode);
+#endif
+
+#if 0
+                // テスト用
+                if ([Environment systemMajorVersion] >= 10) {
+                    mode = kAUVoiceIOProperty_BypassVoiceProcessing;
+                } else {
+                    mode = kAudioSessionMode_Measurement;
+                }
+                stat = AudioSessionSetProperty(kAudioSessionProperty_Mode, sizeof(mode), &mode);
+#endif
+            }
+#endif
+            DEBUG_LOG(@"%s stat=%d", __func__, stat);
+#endif
         } else {
             DEBUG_LOG(@" MoAudio start ERROR");
         }
@@ -474,6 +594,33 @@ void SpectrumAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
 //    MoAudio::shutdown();
 }
 
+#if 0
+- (void) willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation
+                                 duration:(NSTimeInterval)duration
+{
+//    [_fftView pauseReceiveData:YES];
+
+    self.toPortrait = (toInterfaceOrientation == UIInterfaceOrientationPortrait || toInterfaceOrientation == UIInterfaceOrientationPortraitUpsideDown);
+    
+    _fftView.windowFunctionText.hidden = YES;
+    _fftView.windowFunctionSegment.hidden = YES;
+//    _fftView.averageLabel.hidden = YES;
+//    _fftView.averageText.hidden = YES;
+//    _fftView.average.hidden = YES;
+
+//    fftView.logOrLinear.hidden = _toPortrait;
+//    fftView.agcLabel.hidden = _toPortrait;
+//    fftView.agcSwitch.hidden = _toPortrait;
+    [self maintainControll:self.toPortrait];
+    
+    // maintainPinch を実行する。
+    [self.fftView setNeedsLayout];
+    // バナービューの表示制御
+#if AUTO_LAYOUT
+    _contentConstraint.constant = CONSTRAINT_MAGIC;
+#endif
+}
+#else
 - (void)viewWillTransitionToSize:(CGSize)size
        withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {
@@ -491,13 +638,53 @@ void SpectrumAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
 
     _fftView.windowFunctionButton.hidden = YES;
     _fftView.windowFunctionSegment.hidden = YES;
+#if (AVERAGE == ON)
+    _fftView.averageLabel.hidden = YES;
+    _fftView.averageText.hidden = YES;
+    _fftView.averageSegment.hidden = YES;
+#endif
+//    fftView.logOrLinear.hidden = _toPortrait;
+//    fftView.agcLabel.hidden = _toPortrait;
+//    fftView.agcSwitch.hidden = _toPortrait;
     [self maintainControll:self.toPortrait];
     
     // maintainPinch を実行する。
     [self.fftView setNeedsLayout];
+    // バナービューの表示制御
+#if AUTO_LAYOUT
     _contentConstraint.constant = CONSTRAINT_MAGIC;
+#endif
 }
+#endif
 
+#if 0
+- (void) didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+
+//    fftView.logOrLinear.hidden = _toPortrait;
+//    fftView.agcLabel.hidden = _toPortrait;
+//    fftView.agcSwitch.hidden = _toPortrait;
+    
+    [_fftView maintainControl:[[NSUserDefaults standardUserDefaults] integerForKey:kSpectrumModeKey]];
+
+    [self maintainControll:self.toPortrait];
+
+    // maintainPinch を実行する。
+    [self.fftView setNeedsLayout];
+
+#if (AUTO_LAYOUT && ADMOB)
+    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
+        _contentConstraint.constant = CONSTRAINT_MAGIC + [self getAdmobAdHeight];
+    }
+#endif
+
+#if (ADMOB == ON)
+    // AdMob のセットアップ
+    [self setupAdmobFor_iPad:adMobUnitID1];
+#endif
+
+//    [_fftView pauseReceiveData:NO];
+}
+#else
 - (void) traitCollectionDidChange: (UITraitCollection *) previousTraitCollection {
 //    BOOL hideExceptGraphView = (self.traitCollection.verticalSizeClass != UIUserInterfaceSizeClassRegular);
     
@@ -517,11 +704,23 @@ void SpectrumAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
     
     // maintainPinch を実行する。
     [self.fftView setNeedsLayout];
-
+    
+#if (AUTO_LAYOUT && ADMOB)
+    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
+        _contentConstraint.constant = CONSTRAINT_MAGIC + [self getAdmobAdHeight];
+    }
+#endif
+    
+#if (ADMOB == ON)
+    // AdMob のセットアップ
+    [self setupAdmobFor_iPad:adMobUnitID1];
+#endif
+    
 #if (SPECTROGRAM_COMP == ON)
     [_fftView pauseReceiveData:NO];
 #endif
 }
+#endif
 
 - (void) dealloc {
 //    destroyAccumulator();

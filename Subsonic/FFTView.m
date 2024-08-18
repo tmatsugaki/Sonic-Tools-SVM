@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2022  Takuji Matsugaki
+    Copyright (C) 2017-2024  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
  */
 //
 //  FFTView.m
+//
 
 //#import <AVFoundation/AVAudioSession.h>
 #import <AudioToolbox/AudioToolbox.h>
@@ -30,6 +31,7 @@
 #import "WindowFunctionViewController.h"
 
 #define GRAVITY         ON
+#define NUM_RTA_BANDS   120
 
 #define currentRow() MIN(datumTail, effectiveRows - 1)
 // 色相を寒色(低)→暖色（高）の値に変換する。
@@ -38,20 +40,20 @@ static float s_offset_x = 0.2;
 static float s_offset_green = 0.6;
 // RTA用変数
 typedef struct {
-    NSUInteger count;
-    Float64 avgRatio;
-    Float64 curRatio;
-    Float64 peakRatio;
-    Float64 peakValue;
+    NSUInteger count;   // 代表値の場合はバンドに含まれる値の個数
+    Float64 avgRatio;   // 平均値のレクタングルの bar に対する比率（平均化処理「未実装」をする場合のみ使用）
+    Float64 curRatio;   // 現在値のレクタングルの bar に対する比率
+    Float64 peakRatio;  // ピーク値のレクタングルの bar に対する比率
+    Float64 peakValue;  // ピーク値
     CGRect bar;
 } RTA;
-static RTA gRTA[120]; // 6*10バンド
+static RTA gRTA[NUM_RTA_BANDS];
 
 #if (RTA_LOOKUP == ON)
-NSUInteger *rta1Index;
-NSUInteger *rta1_3Index;
-NSUInteger *rta1_6Index;
-NSUInteger *rta1_12Index;
+static NSUInteger *rta1Index = nil;     // 10個
+static NSUInteger *rta1by3Index = nil;  // 30個
+static NSUInteger *rta1by6Index = nil;  // 60個
+static NSUInteger *rta1by12Index = nil; // 120個
 #endif
 
 // リングバッファの材料
@@ -178,31 +180,43 @@ static size_t align32(size_t size)
         NSUInteger spectrumModeSave = [[NSUserDefaults standardUserDefaults] integerForKey:kSpectrumModeKey];
         Float64 halfSampleRate = [UserDefaults sharedManager].sampleRate / 2.0;
         Float64 freqDelta = round(halfSampleRate / fftBufferSize);
-        rta1Index = calloc(sizeof(NSUInteger), halfSampleRate);
-        rta1_3Index = calloc(sizeof(NSUInteger), 3 * halfSampleRate);
-        rta1_6Index = calloc(sizeof(NSUInteger), 6 * halfSampleRate);
-        rta1_12Index = calloc(sizeof(NSUInteger), 12 * halfSampleRate);
 
-        [[NSUserDefaults standardUserDefaults] setInteger:kSpectrumRTA forKey:kSpectrumModeKey];
-        for (NSUInteger dataIndex = 0; dataIndex < fftBufferSize; dataIndex++) {
-            rta1Index[dataIndex] = [self frequency2LogIndex:freqDelta * dataIndex];
-        }
-        [[NSUserDefaults standardUserDefaults] setInteger:kSpectrumRTA1_3 forKey:kSpectrumModeKey];
-        for (NSUInteger dataIndex = 0; dataIndex < fftBufferSize; dataIndex++) {
-            for (NSUInteger div = 0; div < 3; div++) {
-                rta1_3Index[3 * dataIndex + div] = [self frequency2LogIndex:freqDelta * (dataIndex + ((Float64) div) / 3.0)];
+        if (rta1Index == nil) {
+            assert(rta1Index = calloc(sizeof(NSUInteger), halfSampleRate));
+            // テンポラリ
+            [[NSUserDefaults standardUserDefaults] setInteger:kSpectrumRTA forKey:kSpectrumModeKey];
+            for (NSUInteger dataIndex = 0; dataIndex < fftBufferSize; dataIndex++) {
+                rta1Index[dataIndex] = [self frequency2LogIndex:freqDelta * dataIndex];
             }
         }
-        [[NSUserDefaults standardUserDefaults] setInteger:kSpectrumRTA1_6 forKey:kSpectrumModeKey];
-        for (NSUInteger dataIndex = 0; dataIndex < fftBufferSize; dataIndex++) {
-            for (NSUInteger div = 0; div < 6; div++) {
-                rta1_6Index[6 * dataIndex + div] = [self frequency2LogIndex:freqDelta * (dataIndex + ((Float64) div) / 6.0)];
+        if (rta1by3Index == nil) {
+            assert(rta1by3Index = calloc(sizeof(NSUInteger), 3 * halfSampleRate));
+            // テンポラリ
+            [[NSUserDefaults standardUserDefaults] setInteger:kSpectrumRTA1by3 forKey:kSpectrumModeKey];
+            for (NSUInteger dataIndex = 0; dataIndex < fftBufferSize; dataIndex++) {
+                for (NSUInteger nthBand = 0; nthBand < 3; nthBand++) {
+                    rta1by3Index[3 * dataIndex + nthBand] = [self frequency2LogIndex:freqDelta * (dataIndex + ((Float64) nthBand) / 3.0)];
+                }
             }
         }
-        [[NSUserDefaults standardUserDefaults] setInteger:kSpectrumRTA1_12 forKey:kSpectrumModeKey];
-        for (NSUInteger dataIndex = 0; dataIndex < fftBufferSize; dataIndex++) {
-            for (NSUInteger div = 0; div < 12; div++) {
-                rta1_12Index[12 * dataIndex + div] = [self frequency2LogIndex:freqDelta * (dataIndex + ((Float64) div) / 12.0)];
+        if (rta1by6Index == nil) {
+            assert(rta1by6Index = calloc(sizeof(NSUInteger), 6 * halfSampleRate));
+            // テンポラリ
+            [[NSUserDefaults standardUserDefaults] setInteger:kSpectrumRTA1by6 forKey:kSpectrumModeKey];
+            for (NSUInteger dataIndex = 0; dataIndex < fftBufferSize; dataIndex++) {
+                for (NSUInteger nthBand = 0; nthBand < 6; nthBand++) {
+                    rta1by6Index[6 * dataIndex + nthBand] = [self frequency2LogIndex:freqDelta * (dataIndex + ((Float64) nthBand) / 6.0)];
+                }
+            }
+        }
+        if (rta1by12Index == nil) {
+            assert(rta1by12Index = calloc(sizeof(NSUInteger), 12 * halfSampleRate));
+            // テンポラリ
+            [[NSUserDefaults standardUserDefaults] setInteger:kSpectrumRTA1by12 forKey:kSpectrumModeKey];
+            for (NSUInteger dataIndex = 0; dataIndex < fftBufferSize; dataIndex++) {
+                for (NSUInteger nthBand = 0; nthBand < 12; nthBand++) {
+                    rta1by12Index[12 * dataIndex + nthBand] = [self frequency2LogIndex:freqDelta * (dataIndex + ((Float64) nthBand) / 12.0)];
+                }
             }
         }
         [[NSUserDefaults standardUserDefaults] setInteger:spectrumModeSave forKey:kSpectrumModeKey];
@@ -212,15 +226,15 @@ static size_t align32(size_t size)
 }
 
 - (void) initializeRTA {
-    for (NSUInteger barIndex = 0; barIndex < 120; barIndex++) {
-        gRTA[barIndex].count = 0;
+    for (NSUInteger bandIndex = 0; bandIndex < NUM_RTA_BANDS; bandIndex++) {
+        gRTA[bandIndex].count = 0;
 #if 0
-        gRTA[barIndex].avgRatio = 0.0;
-        gRTA[barIndex].curRatio = 0.0;
-        gRTA[barIndex].peakRatio = 0.0;
-        gRTA[barIndex].peakValue = 0.0;
+        gRTA[bandIndex].avgRatio = 0.0;
+        gRTA[bandIndex].curRatio = 0.0;
+        gRTA[bandIndex].peakRatio = 0.0;
+        gRTA[bandIndex].peakValue = 0.0;
 #endif
-        gRTA[barIndex].bar = CGRectMake(0.0, 0.0, 0.0, 0.0);
+        gRTA[bandIndex].bar = CGRectMake(0.0, 0.0, 0.0, 0.0);
     }
 }
 
@@ -389,7 +403,9 @@ static size_t align32(size_t size)
     color = [ColorUtil vfdOn];
     CGContextSetStrokeColorWithColor(context, [ColorUtil vfdOn].CGColor);
     CGContextSetFillColorWithColor(context, [ColorUtil vfdOn].CGColor);
-    // Active(-40dB〜120dB)
+#if DB_POWER
+    static NSInteger dbLabel[] = {120, 110, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0, -10, -20, -30, -40};
+#elif DB_VOLT // Active(-40dB〜120dB)
     static NSInteger dbLabelVolts[] = {120, 100, 80, 60, 40, 20, 0, -20, -40}; // 8+1
     static NSInteger dbLabelVolts2X[] = {120, 110, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0, -10, -20, -30, -40}; // 16+1
     static NSInteger dbLabelVolts4X[] = {120, 115, 110, 105, 100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0, -5, -10, -15, -20, -25, -30, -35, -40}; // 32+1
@@ -401,6 +417,10 @@ static size_t align32(size_t size)
     } else {
         dbLabel = dbLabelVolts;
     }
+#else
+    static NSInteger dbLabel[] = {160, 150, 140, 130, 120, 110, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0};
+#endif
+
     for (NSUInteger i = 0; i < volumeDecades + 1; i++) {
         NSString *title = [NSString stringWithFormat:@"%ld", (long)dbLabel[i]];
         Float32 hOffset = 10.5 * [title length] / 2.0; // 15
@@ -478,13 +498,12 @@ static size_t align32(size_t size)
     color = [ColorUtil vfdOn];
     CGContextSetStrokeColorWithColor(context, [ColorUtil vfdOn].CGColor);
     CGContextSetFillColorWithColor(context, [ColorUtil vfdOn].CGColor);
-
     if (isLinear)
     {// リニア縦罫線
         if (! isHideRuler) {
             CGContextBeginPath(context);
         }
-        // 22050Hz の按分が基本
+        // 22050Hz の按分が基本なので、インデックスの最大値は、FFT_HALF_SAMPLE_RATE。
         Float32 scaleMax = 20000.0;
         NSUInteger divisor = 20;
         NSUInteger numBars = 24;
@@ -515,10 +534,10 @@ static size_t align32(size_t size)
         }
     } else
     {// 対数縦罫線
-        static Float32 rulers[] = {EFFECTIVE_FREQUENCY,   20.0f,   30.0f,   40.0f,   50.0f,   60.0f,   70.0f,   80.0f,   90.0f,
-                                                100.0f,  200.0f,  300.0f,  400.0f,  500.0f,  600.0f,  700.0f,  800.0f,  900.0f,
-                                               1000.0f, 2000.0f, 3000.0f, 4000.0f, 5000.0f, 6000.0f, 7000.0f, 8000.0f, 9000.0f,
-                                              10000.0f,20000.0f};
+        static Float32 rulers[] = {10.0f   ,20.0f   ,30.0f  ,40.0f  ,50.0f  ,60.0f  ,70.0f  ,80.0f  ,90.0f,
+            100.0f  ,200.0f  ,300.0f ,400.0f ,500.0f ,600.0f ,700.0f ,800.0f ,900.0f,
+            1000.0f ,2000.0f ,3000.0f,4000.0f,5000.0f,6000.0f,7000.0f,8000.0f,9000.0f,
+            10000.0f,20000.0f};
         static BOOL shows[]     = {NO,YES,NO,NO,YES,NO,NO,NO,NO,
             YES,YES,NO,NO,YES,NO,NO,NO,NO,
             YES,YES,NO,NO,YES,NO,NO,NO,NO,
@@ -529,14 +548,15 @@ static size_t align32(size_t size)
             CGContextBeginPath(context);
         }
         NSUInteger count = sizeof(rulers) / sizeof(Float32);
+#if DISPOSE_SUBSONIC
         Float32 inactiveArea = (log10(EFFECTIVE_FREQUENCY) / log10(halfSampleRate)) * width;
-
-        for (NSUInteger i = 0; i < count; i++) {// ずれて居る。
+#endif
+        for (NSUInteger i = 0; i < count; i++) {// 400Hzずれて居る。
             Float32 fract;
             Float32 hpos;
-
-            if (rulers[i] > EFFECTIVE_FREQUENCY) {
-                fract = log10(multiplier * rulers[i] - EFFECTIVE_FREQUENCY) / log10(halfSampleRate);
+#if DISPOSE_SUBSONIC
+            if (rulers[i] > CUT_OFF_FREQUENCY) {
+                fract = log10(multiplier * rulers[i] - CUT_OFF_FREQUENCY) / log10(halfSampleRate);
                 hpos = ((fract * (width + inactiveArea)) - inactiveArea + org_x);
             } else {
                 fract = 0.0;
@@ -553,6 +573,22 @@ static size_t align32(size_t size)
                 CGPoint point = CGPointMake((hpos - hOffset) + offset.x, bot_y + 2.0);  // #9
                 [title drawAtPoint:point withAttributes:@{NSFontAttributeName:font, NSForegroundColorAttributeName:color}];
             }
+#else
+            fract = log10(rulers[i]) / log10(halfSampleRate);
+            hpos = (fract * width) + org_x;
+            
+            if (shows[i]) {
+                NSString *title = nil;
+                if (multiplier * rulers[i] >= 1000.0f) {
+                    title = [NSString stringWithFormat:@"%1.0fK", multiplier * rulers[i] / 1000.0f];
+                } else {
+                    title = [NSString stringWithFormat:@"%1.0f" , multiplier * rulers[i]];
+                }
+                Float32 hOffset = 7.0 * [title length] / 2.0; // 6.0
+                CGPoint point = CGPointMake((hpos - hOffset), bot_y + 2.0);
+                [title drawAtPoint:point withAttributes:@{NSFontAttributeName:font, NSForegroundColorAttributeName:color}];
+            }
+#endif
             if (! isHideRuler) {
                 if (hpos + offset.x > FRAME_OFFSET) {// 論理クリッピング #10
                     CGContextMoveToPoint(context   , hpos + offset.x, org_y);   // #11
@@ -594,7 +630,7 @@ static size_t align32(size_t size)
     if (! isHideRuler) {
         CGContextBeginPath(context);
     }
-    // 22050Hz の按分が基本
+    // 22050Hz の按分が基本なので、インデックスの最大値は、FFT_HALF_SAMPLE_RATE。
     Float32 scaleMax = 20000.0;
     NSUInteger divisor = 9;
     NSUInteger numBars = 10;
@@ -713,8 +749,10 @@ static size_t align32(size_t size)
                 }
             }
         }
+        
+#if DISPOSE_SUBSONIC
         Float32 inactiveArea = (log10(EFFECTIVE_FREQUENCY) / log10(halfSampleRate)) * width;
-
+#endif
         // データのプロット
         for (NSUInteger i = 0; i < fftBufferSize; i++) {
             Float64 rawSPL = dataBuffer[i];
@@ -725,6 +763,10 @@ static size_t align32(size_t size)
             if (rawSPL == 0.0) {// rawSPL が 0 だと log10(rawSPL) が +INF になって障害が発生する。
                 rawSPL = SILENT;
             }
+#if DB_POWER
+            Float64 dbTenth = AUDIBLE_DIVISER_LOG_F + log10(rawSPL);   // 対数の値は dB(10log()) の 1/10
+            Float64 ratio = (FULL_DYNAMIC_RANGE_DECADE + fmaxf(-FULL_DYNAMIC_RANGE_DECADE, dbTenth)) / FULL_DYNAMIC_RANGE_DECADE;
+#elif DB_VOLT // Active(log10)
             Float64 decibel = [self volumeToDecibel:rawSPL];
 
             if (spectrumMode == kSpectrogram)
@@ -746,15 +788,16 @@ static size_t align32(size_t size)
                 decibel = MAX(MIN(decibel, 0), -FULL_DYNAMIC_RANGE_DECIBEL);
             }
             Float64 ratio = (FULL_DYNAMIC_RANGE_DECIBEL + fmaxf(-FULL_DYNAMIC_RANGE_DECIBEL, decibel)) / FULL_DYNAMIC_RANGE_DECIBEL;
+#endif
             Float64 volumeOffset = height * ratio;    // -160dB〜0dB (160dB log10(100000000)=8)
             Float64 fract;
             Float64 hpos;
             
-            if (isLinear)
-            {
+#if DISPOSE_SUBSONIC
+            if (isLinear) {
                 fract = (1.0 * i / ((Float32) fftBufferSize));
                 hpos = (fract * width);
-            } else {// ずれて居る。
+            } else {// 400Hzずれて居る。
                 Float64 hz = halfSampleRate * (i / ((Float32) fftBufferSize));
                 
                 if (hz >= EFFECTIVE_FREQUENCY) {
@@ -766,7 +809,15 @@ static size_t align32(size_t size)
                     hpos = 0.0;
                 }
             }
-
+#else
+            if (isLinear) {
+                fract = (1.0 * i / FFT_HALF_DATA_POINTS_F);
+            } else {// 400Hzずれて居る。
+                Float32 hz = halfSampleRate * (i / FFT_HALF_DATA_POINTS_F);
+                fract = log10(hz) / log10(halfSampleRate);
+            }
+            hpos = (fract * width) + org_x;
+#endif
             if (spectrumMode == kSpectrumFFT)
             {
                 if (coloring == NO)
@@ -862,9 +913,10 @@ static size_t align32(size_t size)
 - (void) calcRTA:(Float32 *)dataBuffer
 {
     NSUInteger spectrumMode = [[NSUserDefaults standardUserDefaults] integerForKey:kSpectrumModeKey];
-    NSUInteger barIndex = 0;
+    NSUInteger bandIndex = 0;
     Float64 halfSampleRate = [UserDefaults sharedManager].sampleRate / 2.0;
-//    Float64 freqDelta = round(halfSampleRate / fftBufferSize);
+    Float64 freqDelta = round(halfSampleRate / fftBufferSize);
+#pragma unused(freqDelta)
 
     // インデクスの計算 fftBufferSize は 2048
     for (NSUInteger dataIndex = 0; dataIndex < fftBufferSize; dataIndex++) {
@@ -878,74 +930,74 @@ static size_t align32(size_t size)
             case kSpectrumRTA:// Full Octave RTA
                 hz = dataIndex >> 1;
                 log2hz = log2(hz);
-                barIndex = round(fmax(log2hz, 0.0));
-                [self processBar:dataBuffer[dataIndex] barIndex:barIndex];
+                bandIndex = round(fmax(log2hz, 0.0));
+                [self processBar:dataBuffer[dataIndex] bandIndex:bandIndex];
                 break;
-            case kSpectrumRTA1_3:// 1/3 Octave RTA
+            case kSpectrumRTA1by3:// 1/3 Octave RTA
                 for (NSUInteger i = 0; i < 3; i++) {
                     hz = (((Float64) dataIndex) / 2.0) + (((Float64) i) / 3.0);
                     log2hz = log2(hz);
-                    barIndex = 3.0 * fmax(log2hz, 0.0);
-                    [self processBar:dataBuffer[dataIndex] barIndex:barIndex];
+                    bandIndex = 3.0 * fmax(log2hz, 0.0);
+                    [self processBar:dataBuffer[dataIndex] bandIndex:bandIndex];
                 }
                 break;
-            case kSpectrumRTA1_6:// 1/6 Octave RTA
+            case kSpectrumRTA1by6:// 1/6 Octave RTA
                 for (NSUInteger i = 0; i < 6; i++) {
                     hz = (((Float64) dataIndex) / 2.0) + (((Float64) i) / 6.0);
                     log2hz = log2(hz);
-                    barIndex = 6.0 * fmax(log2hz, 0.0);
-                    [self processBar:dataBuffer[dataIndex] barIndex:barIndex];
+                    bandIndex = 6.0 * fmax(log2hz, 0.0);
+                    [self processBar:dataBuffer[dataIndex] bandIndex:bandIndex];
                 }
                 break;
-           case kSpectrumRTA1_12:// 1/12 Octave RTA
+           case kSpectrumRTA1by12:// 1/12 Octave RTA
                for (NSUInteger i = 0; i < 12; i++) {
                    hz = (((Float64) dataIndex) / 2.0) + (((Float64) i) / 12.0);
                    log2hz = log2(hz);
-                   barIndex = 12.0 * fmax(log2hz, 0.0);
-                   [self processBar:dataBuffer[dataIndex] barIndex:barIndex];
+                   bandIndex = 12.0 * fmax(log2hz, 0.0);
+                   [self processBar:dataBuffer[dataIndex] bandIndex:bandIndex];
                }
                break;
         }
 #else
         switch (spectrumMode) {
-            case kSpectrumRTA:// Full Octave RTA
+        case kSpectrumRTA:// Full Octave RTA
 #if (RTA_LOOKUP == OFF)
-                barIndex = [self frequency2LogIndex:freqDelta * dataIndex];
+            bandIndex = [self frequency2LogIndex:freqDelta * dataIndex];
 #else
-                barIndex = rta1Index[dataIndex];
+            bandIndex = rta1Index[dataIndex];
 #endif
-                [self processBar:dataBuffer[dataIndex] barIndex:barIndex];
-                break;
-            case kSpectrumRTA1_3:// 1/3 Octave RTA
-                for (NSUInteger div = 0; div < 3; div++) {
+            [self processBar:dataBuffer[dataIndex] bandIndex:bandIndex];
+            break;
+        case kSpectrumRTA1by3:// 1/3 Octave RTA
+            for (NSUInteger nthBand = 0; nthBand < 3; nthBand++) {
 #if (RTA_LOOKUP == OFF)
-                    barIndex = [self frequency2LogIndex:freqDelta * (dataIndex + ((Float64) div) / 3.0)];
+                bandIndex = [self frequency2LogIndex:freqDelta * (dataIndex + ((Float64) nthBand) / 3.0)];
 #else
-                    barIndex = rta1_3Index[3 * dataIndex + div];
+                bandIndex = rta1by3Index[3 * dataIndex + nthBand];
 #endif
-                    [self processBar:dataBuffer[dataIndex] barIndex:barIndex];
-                }
-                break;
-            case kSpectrumRTA1_6:// 1/6 Octave RTA
-                for (NSUInteger div = 0; div < 6; div++) {
+                [self processBar:dataBuffer[dataIndex] bandIndex:bandIndex];
+            }
+            break;
+        case kSpectrumRTA1by6:// 1/6 Octave RTA
+            for (NSUInteger nthBand = 0; nthBand < 6; nthBand++) {
 #if (RTA_LOOKUP == OFF)
-                    barIndex = [self frequency2LogIndex:freqDelta * (dataIndex + ((Float64) div) / 6.0)];
+                bandIndex = [self frequency2LogIndex:freqDelta * (dataIndex + ((Float64) nthBand) / 6.0)];
 #else
-                    barIndex = rta1_6Index[6 * dataIndex + div];
+                bandIndex = rta1by6Index[6 * dataIndex + nthBand];
 #endif
-                    [self processBar:dataBuffer[dataIndex] barIndex:barIndex];
-                }
-                break;
-            case kSpectrumRTA1_12:// 1/12 Octave RTA
-                for (NSUInteger div = 0; div < 12; div++) {
+                [self processBar:dataBuffer[dataIndex] bandIndex:bandIndex];
+            }
+            break;
+        case kSpectrumRTA1by12:// 1/12 Octave RTA
+            for (NSUInteger nthBand = 0; nthBand < 12; nthBand++) {
 #if (RTA_LOOKUP == OFF)
-                    barIndex = [self frequency2LogIndex:freqDelta * (dataIndex + ((Float64) div) / 12.0)];
+                bandIndex = [self frequency2LogIndex:freqDelta * (dataIndex + ((Float64) nthBand) / 12.0)];
 #else
-                    barIndex = rta1_12Index[12 * dataIndex + div];
+                bandIndex = rta1by12Index[12 * dataIndex + nthBand];
 #endif
-                    [self processBar:dataBuffer[dataIndex] barIndex:barIndex];
-                }
-                break;
+                [self processBar:dataBuffer[dataIndex] bandIndex:bandIndex];
+            }
+            break;
         }
 #endif
     }
@@ -958,8 +1010,7 @@ static size_t align32(size_t size)
 }
 
 - (Float64) processBar:(Float64) rawSPL
-//               divisor:(NSUInteger)divisor
-              barIndex:(NSUInteger)barIndex
+             bandIndex:(NSUInteger)bandIndex
 {
     NSUInteger averageMode = [[NSUserDefaults standardUserDefaults] integerForKey:kRTAAverageModeKey];
     // 音圧の処理
@@ -971,25 +1022,25 @@ static size_t align32(size_t size)
 
     if (averageMode)
     {// 平均化する。
-        gRTA[barIndex].curRatio = ratio;
-        if (gRTA[barIndex].count == 0) {
-            gRTA[barIndex].avgRatio = ratio;
-            gRTA[barIndex].peakRatio = ratio;
-            gRTA[barIndex].peakValue = rawSPL;
+        gRTA[bandIndex].curRatio = ratio;
+        if (gRTA[bandIndex].count == 0) {
+            gRTA[bandIndex].avgRatio = ratio;
+            gRTA[bandIndex].peakRatio = ratio;
+            gRTA[bandIndex].peakValue = rawSPL;
         } else {// 平均化処理（主処理）
-            Float64 sumRatio = gRTA[barIndex].avgRatio * gRTA[barIndex].count + ratio;
-            gRTA[barIndex].avgRatio = sumRatio / (gRTA[barIndex].count + 1);
+            Float64 sumRatio = gRTA[bandIndex].avgRatio * gRTA[bandIndex].count + ratio;
+            gRTA[bandIndex].avgRatio = sumRatio / (gRTA[bandIndex].count + 1);
         }
-        if (ratio > gRTA[barIndex].peakRatio) {
-            gRTA[barIndex].peakRatio = ratio;
-            gRTA[barIndex].peakValue = rawSPL;
+        if (ratio > gRTA[bandIndex].peakRatio) {
+            gRTA[bandIndex].peakRatio = ratio;
+            gRTA[bandIndex].peakValue = rawSPL;
         }
-        gRTA[barIndex].count++;
+        gRTA[bandIndex].count++;
     } else
     {// 平均化しない。
-        if (ratio > gRTA[barIndex].peakRatio) {
-            gRTA[barIndex].peakRatio = ratio;
-            gRTA[barIndex].peakValue = rawSPL;
+        if (ratio > gRTA[bandIndex].peakRatio) {// バンドのピーク値を更新する。
+            gRTA[bandIndex].peakRatio = ratio;
+            gRTA[bandIndex].peakValue = rawSPL;
         }
     }
     return ratio;
@@ -1011,11 +1062,17 @@ static size_t align32(size_t size)
     if (rawSPL == 0.0) {// rawSPL が 0 だと log10(rawSPL) が +INF になって障害が発生する。
         rawSPL = SILENT;
     }
+#if DB_POWER
+    // 対数の値は dB(10log()) の 1/10
+    Float64 dbTenth = AUDIBLE_DIVISER_LOG_F + log10(rawSPL);        // 対数の値は dB(10log()) の 1/10
+    Float64 ratio = (FULL_DYNAMIC_RANGE_DECADE + fmaxf(-FULL_DYNAMIC_RANGE_DECADE, dbTenth)) / FULL_DYNAMIC_RANGE_DECADE;
+#elif DB_VOLT // Active(log10)
     // 対数の値は dB(20log()) の 1/20
     Float64 decibel = [self volumeToDecibel:rawSPL];
     // ゲインは -0.125〜0.125 を -20.0dB〜20.0dB にマップする。
 //    Float32 gain = [[NSUserDefaults standardUserDefaults] floatForKey:kMicGainKey];
     Float64 ratio = (FULL_DYNAMIC_RANGE_DECIBEL + fmaxf(-FULL_DYNAMIC_RANGE_DECIBEL, decibel)) / FULL_DYNAMIC_RANGE_DECIBEL;
+#endif
     Float64 volumeOffset = height * ratio;    // -160dB〜0dB (160dB log10(100000000)=8)
     
     Float32 inactiveArea = (log10(EFFECTIVE_FREQUENCY) / log10(halfSampleRate)) * width;
@@ -1023,11 +1080,11 @@ static size_t align32(size_t size)
     Float64 hpos;
     BOOL isLinear = [[NSUserDefaults standardUserDefaults] boolForKey:kFFTMathModeLinearKey];
     
-    if (isLinear)
-    {
+#if DISPOSE_SUBSONIC
+    if (isLinear) {
         fract = (1.0 * _maxIndex / ((Float32) fftBufferSize));
         hpos = (fract * width);
-    } else {// ずれて居る。
+    } else {// 400Hzずれて居る。
         Float64 hz = halfSampleRate * (_maxIndex / ((Float32) fftBufferSize));
         
         if (hz >= EFFECTIVE_FREQUENCY) {
@@ -1039,6 +1096,15 @@ static size_t align32(size_t size)
             hpos = 0.0;
         }
     }
+#else
+    if (isLinear) {
+        fract = (1.0 * _maxIndex / FFT_HALF_DATA_POINTS_F);
+    } else {// 400Hzずれて居る。
+        Float32 hz = halfSampleRate * (_maxIndex / FFT_HALF_DATA_POINTS_F);
+        fract = log10(hz) / log10(halfSampleRate);
+    }
+    hpos = (fract * width) + org_x;
+#endif
     maxPos.x = hpos;
     maxPos.y = height - volumeOffset;
     
@@ -1078,8 +1144,14 @@ static size_t align32(size_t size)
     CGContextSetFillColorWithColor(context, [UIColor whiteColor].CGColor);
     NSString *hz = [NSString stringWithFormat:@"%.0fHz", _maxHZ];
     CGFloat hzWidth = [self widthOfString:hz withFont:font];
+#if DB_POWER
+    NSString *dbLabel = [NSString stringWithFormat:@"%.2fdB", 10.0 * (log10(AUDIBLE_MULTIPLE_F * _maxHZValue)))];
+#elif DB_VOLT // Active(log10)
     NSString *dbLabel = [NSString stringWithFormat:@"%.2fdB", 20.0 * (log10(AUDIBLE_MULTIPLE_F * _maxHZValue))];
+#endif
     CGFloat dbWidth = [self widthOfString:dbLabel withFont:font];
+//    DEBUG_LOG(@"%g Hz", hzWidth);
+//    DEBUG_LOG(@"%g dB", dbWidth);
     BOOL limited =  ((maxPos.x + hzWidth + 4.0 + offset.x > width) || (maxPos.x + dbWidth + 4.0 + offset.x > width));
 
     if (limited) {
@@ -1118,13 +1190,13 @@ static size_t align32(size_t size)
     NSUInteger size = 10.0;
     
     switch (spectrumMode) {
-        case kSpectrumRTA1_3:
+        case kSpectrumRTA1by3:
             size *= 3.0;
             break;
-        case kSpectrumRTA1_6:
+        case kSpectrumRTA1by6:
             size *= 6.0;
             break;
-        case kSpectrumRTA1_12:
+        case kSpectrumRTA1by12:
             size *= 12.0;
             break;
     }
@@ -1158,13 +1230,13 @@ static size_t align32(size_t size)
         case kSpectrumRTA:// log2(hz) - 5.0
             index = log2hz - 5.0;
             break;
-        case kSpectrumRTA1_3:// round(3.0*(log2(hz) - 4.0)) - 2.0
+        case kSpectrumRTA1by3:// round(3.0*(log2(hz) - 4.0)) - 2.0
             index = round(3.0*(log2hz - 4.0)) - 2.0;
             break;
-        case kSpectrumRTA1_6:// round(6.0*(log2(hz) - 4.0)) - 4.0
+        case kSpectrumRTA1by6:// round(6.0*(log2(hz) - 4.0)) - 4.0
             index = round(6.0*(log2hz - 4.0)) - 4.0;
             break;
-        case kSpectrumRTA1_12:// round(12.0*(log2(hz) - 4.0)) - 6.0
+        case kSpectrumRTA1by12:// round(12.0*(log2(hz) - 4.0)) - 6.0
             index = round(12.0*(log2hz - 4.0)) - 8.0;
             break;
     }
@@ -1175,7 +1247,7 @@ static size_t align32(size_t size)
     NSUInteger spectrumMode = [[NSUserDefaults standardUserDefaults] integerForKey:kSpectrumModeKey];
     Float64 hz = 0.0;
     
-    if (index < 0 || index >= 120) {
+    if (index < 0 || index >= NUM_RTA_BANDS) {
         hz = 0.0;
     } else {
         Float64 m = index;
@@ -1183,13 +1255,13 @@ static size_t align32(size_t size)
             case kSpectrumRTA:// 32*2^i = 2^(i+5)
                 hz = pow(2.0, m + 5.0);
                 break;
-            case kSpectrumRTA1_3:// 16*2^((i+2)/3) = 2^((i+2)/3+4)
+            case kSpectrumRTA1by3:// 16*2^((i+2)/3) = 2^((i+2)/3+4)
                 hz = pow(2.0, (m + 2.0) / 3.0 + 4.0);
                 break;
-            case kSpectrumRTA1_6:// 16*2^((i+4)/6) = 2^((i+4)/6+4)
+            case kSpectrumRTA1by6:// 16*2^((i+4)/6) = 2^((i+4)/6+4)
                 hz = pow(2.0, (m + 4.0) / 6.0 + 4.0);
                 break;
-            case kSpectrumRTA1_12:// 16*2^((i+4)/6) = 2^((i+4)/6+4)
+            case kSpectrumRTA1by12:// 16*2^((i+4)/6) = 2^((i+4)/6+4)
                 hz = 16.0 * pow(2.0, m / 12.0 + 2.0 / 3.0);
                 break;
         }
@@ -1227,19 +1299,19 @@ static size_t align32(size_t size)
             numBars = 10;
             hOffset = 3.0;
             break;
-        case kSpectrumRTA1_3:// 1/3 Octave RTA
+        case kSpectrumRTA1by3:// 1/3 Octave RTA
             divisor = 9.0 * 3.0;
             numBars = 30;
             hOffset = 2.0;
             break;
-        case kSpectrumRTA1_6:// 1/6 Octave RTA
+        case kSpectrumRTA1by6:// 1/6 Octave RTA
             divisor = 9.0 * 6.0;
             numBars = 60;
             hOffset = 1.0;
             break;
-        case kSpectrumRTA1_12:// 1/12 Octave RTA
+        case kSpectrumRTA1by12:// 1/12 Octave RTA
             divisor = 9.0 * 12.0;
-            numBars = 120;
+            numBars = NUM_RTA_BANDS;
             hOffset = 1.0;
             break;
     }
@@ -1269,15 +1341,15 @@ static size_t align32(size_t size)
             CGFloat height;
             
             switch (averageMode) {
-                case 1:// 平均化した結果を使うがピークを優先する。
-                case 2:// 平均化した結果を使うがピークを優先する。
+                case 1:// 平均化した結果を使うがピークを優先する。（未実装）
+                case 2:// 平均化した結果を使うがピークを優先する。（未実装）
                     if (gRTA[i].curRatio > gRTA[i].avgRatio) {
                         height = gRTA[i].bar.size.height * gRTA[i].curRatio;
                     } else {
                         height = gRTA[i].bar.size.height * gRTA[i].avgRatio;
                     }
                     break;
-                case 3:// 平均化した結果のみ使う
+                case 3:// 平均化した結果のみ使う（未実装）
                     height = gRTA[i].bar.size.height * gRTA[i].avgRatio;
                     break;
                 default:// 平均化しない
@@ -1452,9 +1524,9 @@ static size_t align32(size_t size)
             coloring = [[NSUserDefaults standardUserDefaults] boolForKey:kFFTColoringKey];
             break;
         case kSpectrumRTA:
-        case kSpectrumRTA1_3:
-        case kSpectrumRTA1_6:
-        case kSpectrumRTA1_12:
+        case kSpectrumRTA1by3:
+        case kSpectrumRTA1by6:
+        case kSpectrumRTA1by12:
             coloring = [[NSUserDefaults standardUserDefaults] boolForKey:kRTAColoringKey];
             break;
     }
@@ -1723,6 +1795,54 @@ static size_t align32(size_t size)
     }
 }
 
+- (void) maintainAverageControl {
+#if (AVERAGE == ON)
+    NSUInteger spectrumMode = [[NSUserDefaults standardUserDefaults] integerForKey:kSpectrumModeKey];
+    
+    switch (spectrumMode) {
+        case kSpectrumRTA:
+        case kSpectrumRTA1by3:
+        case kSpectrumRTA1by6:
+        case kSpectrumRTA1by12:
+            if ([Environment isPortrait] &&
+                ([Environment isIPad] == NO && [Environment isMIPad] == NO && [Environment isLIPad] == NO))
+            {
+                NSString *averageModeName = nil;
+                NSUInteger averageMode = [[NSUserDefaults standardUserDefaults] integerForKey:kRTAAverageModeKey];
+                
+//                _averageLabel.hidden = NO;
+//                _averageSegment.hidden = YES;
+//                _averageText.hidden = NO;
+                switch (averageMode) {
+                    case 0:
+                        averageModeName = @"None";
+                        break;
+                    case 1:
+                        averageModeName = @"Fast";
+                        break;
+                    case 2:
+                        averageModeName = @"Slow";
+                        break;
+                    case 3:
+                        averageModeName = @"Infinite";
+                        break;
+                }
+                _averageText.text = NSLocalizedString(averageModeName, @"");
+            } else {
+//                _averageLabel.hidden = NO;
+//                _averageSegment.hidden = NO;
+//                _averageText.hidden = YES;
+            }
+            break;
+        default:
+//            _averageLabel.hidden = YES;
+//            _averageSegment.hidden = YES;
+//            _averageText.hidden = YES;
+            break;
+    }
+#endif
+}
+
 - (void) maintainControl:(NSUInteger)spectrumMode {
 
 #if (CSV_OUT == ON)
@@ -1771,6 +1891,11 @@ static size_t align32(size_t size)
             _gainLabel.text = NSLocalizedString(@"Mic Gain", @"");
             _gainLabel.hidden = NO;
             _gainSlider.hidden = NO;
+#if (AVERAGE == ON)
+//            _averageLabel.hidden = YES;
+//            _averageSegment.hidden = YES;
+//            _averageText.hidden = YES;
+#endif
             _noiseReductionLabel.hidden = YES;
             _noiseReductionSlider.hidden = YES;
             _rtaHzText.hidden = YES;
@@ -1790,6 +1915,11 @@ static size_t align32(size_t size)
             _gainLabel.text = NSLocalizedString(@"Mic Gain", @"");
             _gainLabel.hidden = NO;
             _gainSlider.hidden = NO;
+#if (AVERAGE == ON)
+//            _averageLabel.hidden = NO;
+//            _averageSegment.hidden = NO;
+//            _averageText.hidden = NO;
+#endif
             _noiseReductionLabel.hidden = YES;
             _noiseReductionSlider.hidden = YES;
             _rtaHzText.hidden = ! isRTA_markerShown;
@@ -1797,7 +1927,7 @@ static size_t align32(size_t size)
             _rtaDecibelText.hidden = ! isRTA_markerShown;
             _rtaDecibelLabel.hidden = ! isRTA_markerShown;
             break;
-        case kSpectrumRTA1_3: // 1/3 Octave RTA
+        case kSpectrumRTA1by3: // 1/3 Octave RTA
             _colorLabel.hidden = NO;
             [_colorLabel setText:NSLocalizedString(@"RTA Color", @"")];
             _colorSwitch.hidden = NO;
@@ -1809,6 +1939,11 @@ static size_t align32(size_t size)
             _gainLabel.text = NSLocalizedString(@"Mic Gain", @"");
             _gainLabel.hidden = NO;
             _gainSlider.hidden = NO;
+#if (AVERAGE == ON)
+//            _averageLabel.hidden = NO;
+//            _averageSegment.hidden = NO;
+//            _averageText.hidden = NO;
+#endif
             _noiseReductionLabel.hidden = YES;
             _noiseReductionSlider.hidden = YES;
             _rtaHzText.hidden = ! isRTA_markerShown;
@@ -1816,7 +1951,7 @@ static size_t align32(size_t size)
             _rtaDecibelText.hidden = ! isRTA_markerShown;
             _rtaDecibelLabel.hidden = ! isRTA_markerShown;
             break;
-        case kSpectrumRTA1_6: // 1/6 Octave RTA
+        case kSpectrumRTA1by6: // 1/6 Octave RTA
             _colorLabel.hidden = NO;
             [_colorLabel setText:NSLocalizedString(@"RTA Color", @"")];
             _colorSwitch.hidden = NO;
@@ -1828,6 +1963,11 @@ static size_t align32(size_t size)
             _gainLabel.text = NSLocalizedString(@"Mic Gain", @"");
             _gainLabel.hidden = NO;
             _gainSlider.hidden = NO;
+#if (AVERAGE == ON)
+            _averageLabel.hidden = NO;
+            _averageSegment.hidden = NO;
+            _averageText.hidden = NO;
+#endif
             _noiseReductionLabel.hidden = YES;
             _noiseReductionSlider.hidden = YES;
             _rtaHzText.hidden = ! isRTA_markerShown;
@@ -1835,7 +1975,7 @@ static size_t align32(size_t size)
             _rtaDecibelText.hidden = ! isRTA_markerShown;
             _rtaDecibelLabel.hidden = ! isRTA_markerShown;
             break;
-        case kSpectrumRTA1_12: // 1/12 Octave RTA
+        case kSpectrumRTA1by12: // 1/12 Octave RTA
             _colorLabel.hidden = NO;
             [_colorLabel setText:NSLocalizedString(@"RTA Color", @"")];
             _colorSwitch.hidden = NO;
@@ -1847,6 +1987,11 @@ static size_t align32(size_t size)
             _gainLabel.text = NSLocalizedString(@"Mic Gain", @"");
             _gainLabel.hidden = NO;
             _gainSlider.hidden = NO;
+#if (AVERAGE == ON)
+//            _averageLabel.hidden = NO;
+//            _averageSegment.hidden = NO;
+//            _averageText.hidden = NO;
+#endif
             _noiseReductionLabel.hidden = YES;
             _noiseReductionSlider.hidden = YES;
             _rtaHzText.hidden = ! isRTA_markerShown;
@@ -1865,6 +2010,11 @@ static size_t align32(size_t size)
             _gainLabel.text = NSLocalizedString(@"Mic Gain", @"");
             _gainLabel.hidden = NO;
             _gainSlider.hidden = NO;
+#if (AVERAGE == ON)
+            _averageLabel.hidden = YES;
+            _averageSegment.hidden = YES;
+            _averageText.hidden = YES;
+#endif
             _noiseReductionLabel.hidden = NO;
             _noiseReductionSlider.hidden = NO;
             _noiseReductionSlider.minimumValue = 0.0;
@@ -1878,6 +2028,7 @@ static size_t align32(size_t size)
     }
     [self maintainPeakGridButton];
     [self maintainWindowFunctionControl];
+    [self maintainAverageControl];
     [self setupFFTSettings];
 }
 
@@ -2217,9 +2368,9 @@ static size_t align32(size_t size)
     {// Spectrogram の場合パンを許可しない。
         //
     } else if (spectrumMode == kSpectrumRTA ||
-               spectrumMode == kSpectrumRTA1_3 ||
-               spectrumMode == kSpectrumRTA1_6 ||
-               spectrumMode == kSpectrumRTA1_12)
+               spectrumMode == kSpectrumRTA1by3 ||
+               spectrumMode == kSpectrumRTA1by6 ||
+               spectrumMode == kSpectrumRTA1by12)
     {
         Float64 hz = 0.0;
         CGPoint pt = CGPointMake([sender locationInView:self].x - FRAME_OFFSET, [sender locationInView:self].y - FRAME_OFFSET);
@@ -2284,6 +2435,62 @@ static size_t align32(size_t size)
                         rect:(CGRect)rect
 {
     return;
+
+    if (scrollBarVisibility) {
+#if 1
+        CGRect frame = CGGraphRectMake(rect);
+        CGFloat org_x = frame.origin.x;
+        CGFloat org_y = frame.origin.y;
+        CGFloat width = frame.size.width;
+        CGFloat height = frame.size.height;
+        
+        if (_pinchScaleX > 0 && _panOffset.x <= 0) {
+            CGFloat hpos = org_x + 5.0;
+            CGFloat vpos = org_y + height - 5.0;
+            
+            CGContextSetLineWidth(context, kScrollBarLineWidth);
+            CGContextSetStrokeColorWithColor(context, [ColorUtil vfdOn].CGColor);
+            
+            CGContextBeginPath(context);
+            CGContextMoveToPoint(context, hpos - _panOffset.x / _pinchScaleX, vpos);
+            CGContextAddLineToPoint(context, hpos - _panOffset.x / _pinchScaleX + width / _pinchScaleX - 15.0, vpos);
+            CGContextStrokePath(context);
+        }
+        if (_pinchScaleY > 0 && _panOffset.y <= 0) {
+            CGFloat hpos = org_x + width - 5.0;
+            CGFloat vpos = org_y + 5.0;
+            
+            CGContextSetLineWidth(context, kScrollBarLineWidth);
+            CGContextSetStrokeColorWithColor(context, [ColorUtil vfdOn].CGColor);
+            
+            CGContextBeginPath(context);
+            CGContextMoveToPoint(context, hpos, vpos - _panOffset.y / _pinchScaleY);
+            CGContextAddLineToPoint(context, hpos, vpos - _panOffset.y / _pinchScaleY + height / _pinchScaleY - 15.0);
+            CGContextStrokePath(context);
+        }
+#else
+        if (_pinchScaleX > 0 && _panOffset.x <= 0) {
+            CGFloat hpos = self.frame.origin.x;
+            CGFloat width = self.frame.size.width;
+            CGFloat leadingRatio = (hpos - _panOffset.x / _pinchScaleX) / width;
+            CGFloat contentRatio = (hpos - _panOffset.x / _pinchScaleX + width / _pinchScaleX) / width;
+            
+            _hScrollBar.leadingRatio = leadingRatio;
+            _hScrollBar.contentRatio = contentRatio;
+            [_hScrollBar setNeedsDisplay];
+        }
+        if (_pinchScaleY > 0 && _panOffset.y <= 0) {
+            CGFloat vpos = self.frame.origin.y;
+            CGFloat height = self.frame.size.height;
+            CGFloat leadingRatio = (vpos - _panOffset.y / _pinchScaleY) / height;
+            CGFloat contentRatio = (vpos - _panOffset.y / _pinchScaleY + height / _pinchScaleY) / height;
+            
+            _vScrollBar.leadingRatio = leadingRatio;
+            _vScrollBar.contentRatio = contentRatio;
+            [_vScrollBar setNeedsDisplay];
+        }
+#endif
+    }
 }
 
 - (void) hideScrollIndicator {
@@ -2333,14 +2540,18 @@ static size_t align32(size_t size)
             [_windowFunctionButton setTitle:NSLocalizedString(@"Blackman", @"ブラックマン") forState:UIControlStateNormal];
             break;
         case kSpectrumRTA:
-        case kSpectrumRTA1_3:
-        case kSpectrumRTA1_6:
-        case kSpectrumRTA1_12:
+        case kSpectrumRTA1by3:
+        case kSpectrumRTA1by6:
+        case kSpectrumRTA1by12:
             [[NSUserDefaults standardUserDefaults] setBool:NO forKey:kFFTHideRulerKey];
             [[NSUserDefaults standardUserDefaults] setInteger:3 forKey:kWindowFunctionKey];
             [[NSUserDefaults standardUserDefaults] setBool:NO forKey:kRTAColoringKey];
             [[NSUserDefaults standardUserDefaults] setBool:NO forKey:kFFTMathModeLinearKey];
+#if (AVERAGE == ON)
+            [[NSUserDefaults standardUserDefaults] setInteger:1 forKey:kRTAAverageModeKey];
+#else
             [[NSUserDefaults standardUserDefaults] setInteger:0 forKey:kRTAAverageModeKey];
+#endif
             [self initializeRTA];
             [self startAverage:[[NSUserDefaults standardUserDefaults] integerForKey:kRTAAverageModeKey]];
             break;
@@ -2375,14 +2586,18 @@ static size_t align32(size_t size)
             [_windowFunctionButton setTitle:NSLocalizedString(@"Blackman", @"ブラックマン") forState:UIControlStateNormal];
             break;
         case kSpectrumRTA:
-        case kSpectrumRTA1_3:
-        case kSpectrumRTA1_6:
-        case kSpectrumRTA1_12:
+        case kSpectrumRTA1by3:
+        case kSpectrumRTA1by6:
+        case kSpectrumRTA1by12:
             [[NSUserDefaults standardUserDefaults] setBool:NO forKey:kFFTHideRulerKey];
             [[NSUserDefaults standardUserDefaults] setInteger:3 forKey:kWindowFunctionKey];
             [[NSUserDefaults standardUserDefaults] setBool:YES forKey:kRTAColoringKey];
             [[NSUserDefaults standardUserDefaults] setBool:NO forKey:kRTAModeLineKey];
+#if (AVERAGE == ON)
+            [[NSUserDefaults standardUserDefaults] setInteger:1 forKey:kRTAAverageModeKey];
+#else
             [[NSUserDefaults standardUserDefaults] setInteger:0 forKey:kRTAAverageModeKey];
+#endif
             [self initializeRTA];
             [self startAverage:[[NSUserDefaults standardUserDefaults] integerForKey:kRTAAverageModeKey]];
             break;
@@ -2417,9 +2632,9 @@ static size_t align32(size_t size)
             coloring = [[NSUserDefaults standardUserDefaults] boolForKey:kFFTColoringKey];
             break;
         case kSpectrumRTA:
-        case kSpectrumRTA1_3:
-        case kSpectrumRTA1_6:
-        case kSpectrumRTA1_12:
+        case kSpectrumRTA1by3:
+        case kSpectrumRTA1by6:
+        case kSpectrumRTA1by12:
             coloring = [[NSUserDefaults standardUserDefaults] boolForKey:kRTAColoringKey];
             break;
     }
@@ -2437,10 +2652,13 @@ static size_t align32(size_t size)
             [_logOrLinear setSelectedSegmentIndex:isLinear ? 1 : 0];
             break;
         case kSpectrumRTA:
-        case kSpectrumRTA1_3:
-        case kSpectrumRTA1_6:
-        case kSpectrumRTA1_12:
+        case kSpectrumRTA1by3:
+        case kSpectrumRTA1by6:
+        case kSpectrumRTA1by12:
             [_logOrLinear setSelectedSegmentIndex:polyLine ? 1 : 0];
+#if (AVERAGE == ON)
+            [_averageSegment setSelectedSegmentIndex:rtaAverage];
+#endif
             break;
     }
 }
@@ -2555,6 +2773,7 @@ static size_t align32(size_t size)
 //    [self hapticFeedbackMediumImpact];
 
     [self maintainWindowFunctionControl];
+    [self maintainAverageControl];
 
     if (_settingsView.hidden) {
 //        [_settingsView becomeFirstResponder];
@@ -2599,9 +2818,9 @@ static size_t align32(size_t size)
     
     switch (spectrumMode) {
         case kSpectrumRTA:
-        case kSpectrumRTA1_3:
-        case kSpectrumRTA1_6:
-        case kSpectrumRTA1_12:
+        case kSpectrumRTA1by3:
+        case kSpectrumRTA1by6:
+        case kSpectrumRTA1by12:
             [[NSUserDefaults standardUserDefaults] setBool:((UISwitch *) sender).on forKey:kRTAColoringKey];
             break;
         default:
@@ -2633,9 +2852,9 @@ static size_t align32(size_t size)
 
     switch ([[NSUserDefaults standardUserDefaults] integerForKey:kSpectrumModeKey]) {
         case kSpectrumRTA:
-        case kSpectrumRTA1_3:
-        case kSpectrumRTA1_6:
-        case kSpectrumRTA1_12:
+        case kSpectrumRTA1by3:
+        case kSpectrumRTA1by6:
+        case kSpectrumRTA1by12:
             [self startAverage:[[NSUserDefaults standardUserDefaults] integerForKey:kRTAAverageModeKey]];
             break;
             
@@ -2814,11 +3033,11 @@ enum {
     }
     NSString* path = [dir stringByAppendingPathComponent:fileName];
     self.fp = fopen([path UTF8String], "a");
-    if (_fp) {
+    if (_fp) {// CSVヘッダー
         if (spectrumMode == kSpectrogram) {
-            NSMutableString *buffer = [[NSMutableString alloc] init];
+            NSMutableString *buffer = [[NSMutableString alloc] initWithString:@"Timestamp,"];
             for (NSUInteger i = 1; i < fftBufferSize; i++) {
-                [buffer appendFormat:@"%ldHz", 22050 * i / fftBufferSize];
+                [buffer appendFormat:@"%ldHz(dB)", 22050 * i / fftBufferSize];
                 if (i < fftBufferSize - 1) {
                     [buffer appendString:@","];
                 }
@@ -2826,7 +3045,52 @@ enum {
             [buffer appendString:@"\n"];
             fprintf(_fp, "%s", [buffer UTF8String]);
         } else {
-            fprintf(_fp, "Timestamp,LoudestFrequency(Hz),Loudness(dB)\n");
+// Start Mod 2024/08/18 tmatsugaki
+            NSMutableString *buffer = [[NSMutableString alloc] initWithString:@"Timestamp,"];
+
+            switch (spectrumMode) {
+            case kSpectrumFFT:// FFT
+                [buffer appendString:@"Frequency(Hz),Loudness(dB)"];
+                break;
+            case kSpectrumRTA:// Full Octave RTA
+                for (NSUInteger nthBand = 0; nthBand < 10; nthBand++) {
+                    NSString *hz = [NSString stringWithFormat:@"%.0fHz(dB)", [self logIndex2Frequency:nthBand]];
+                    [buffer appendString:hz];
+                    if (nthBand < 9) {
+                        [buffer appendString:@","];
+                    }
+                }
+                break;
+            case kSpectrumRTA1by3:// 1/3 Octave RTA
+                for (NSUInteger nthBand = 0; nthBand < 30; nthBand++) {
+                    NSString *hz = [NSString stringWithFormat:@"%.0fHz(dB)", [self logIndex2Frequency:nthBand]];
+                    [buffer appendString:hz];
+                    if (nthBand < 29) {
+                        [buffer appendString:@","];
+                    }
+                }
+                break;
+            case kSpectrumRTA1by6:// 1/6 Octave RTA
+                for (NSUInteger nthBand = 0; nthBand < 60; nthBand++) {
+                    NSString *hz = [NSString stringWithFormat:@"%.0fHz(dB)", [self logIndex2Frequency:nthBand]];
+                    [buffer appendString:hz];
+                    if (nthBand < 59) {
+                        [buffer appendString:@","];
+                    }
+                }
+                break;
+            case kSpectrumRTA1by12:// 1/12 Octave RTA
+                for (NSUInteger nthBand = 0; nthBand < 120; nthBand++) {
+                    NSString *hz = [NSString stringWithFormat:@"%.0fHz(dB)", [self logIndex2Frequency:nthBand]];
+                    [buffer appendString:hz];
+                    if (nthBand < 119) {
+                        [buffer appendString:@","];
+                    }
+                }
+                break;
+            }
+            fprintf(_fp, "%s\n", [buffer UTF8String]);
+// End Mod 2024/08/18 tmatsugaki
         }
     }
     if ([_logTimer isValid] == YES) {
@@ -2865,9 +3129,10 @@ enum {
         }
 #endif
         if (_fp) {
+            // CSVデータ
             if (spectrumMode == kSpectrogram) {
-                NSMutableString *buffer = [[NSMutableString alloc] init];
-                
+                NSMutableString *buffer = [NSMutableString stringWithFormat:@"%@,", [_dataDateFormatter stringFromDate:[NSDate date]]];
+
                 for (NSUInteger i = 1; i < fftBufferSize; i++) {
                     Float64 rawSPL = fftData[i];
                     
@@ -2895,7 +3160,7 @@ enum {
                 [buffer appendString:@"\n"];
                 fprintf(_fp, "%s", [buffer UTF8String]);
                 DEBUG_LOG(@"%@", buffer);
-            } else {
+            } else if (spectrumMode == kSpectrumFFT) {
                 Float64 decibel = 20.0 * log10(AUDIBLE_MULTIPLE_F * _maxHZValue);
                 NSString *hz = [NSString stringWithFormat:@"%.0f", _maxHZ];
                 NSString *db = [NSString stringWithFormat:@"%.2f", decibel];
@@ -2903,6 +3168,34 @@ enum {
                 
                 fprintf(_fp, "%s", [str UTF8String]);
                 DEBUG_LOG(@"%@", str);
+            } else {
+                NSUInteger numBands = 0;
+
+                switch (spectrumMode) {
+                case kSpectrumRTA:
+                    numBands = 10;
+                    break;
+                case kSpectrumRTA1by3:
+                    numBands = 30;
+                    break;
+                case kSpectrumRTA1by6:
+                    numBands = 60;
+                    break;
+                case kSpectrumRTA1by12:
+                    numBands = 120;
+                    break;
+                }
+                NSMutableString *buffer = [NSMutableString stringWithFormat:@"%@,", [_dataDateFormatter stringFromDate:[NSDate date]]];
+                for (NSUInteger bandIndex = 0; bandIndex < numBands; bandIndex++) {
+                    Float64 value = gRTA[bandIndex].peakValue;
+                    NSString *db = [NSString stringWithFormat:@"%.2f", 20.0 * log10(AUDIBLE_MULTIPLE_F * value)];
+                    [buffer appendString:db];
+                    if (bandIndex < numBands - 1) {
+                        [buffer appendString:@","];
+                    }
+                }
+                fprintf(_fp, "%s\n", [buffer UTF8String]);
+                DEBUG_LOG(@"%@", buffer);
             }
         }
     } else {// ポーズ中

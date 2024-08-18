@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2022  Takuji Matsugaki
+    Copyright (C) 2017-2024  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
  */
 //
 //  definitions.h
+//
 
 #ifndef definitions_h
 #define definitions_h
@@ -35,7 +36,9 @@
 #define LOG_CURRENT_METHOD ;
 #endif
 
+#define AUTO_LAYOUT                 ON              // ON
 #define SPECTROGRAM_COMP            OFF             // ON（残務：リングバッファの引き継ぎ、iPad で回転させた時のシーケンス絡みのバグがある）
+#define AVERAGE                     OFF             // ON
 #define RTA_MARKER                  ON              // ON
 #define PRECISE_RTA                 ON              // ON
 #define RTA_LOOKUP                  ON              // ON
@@ -49,17 +52,27 @@
 // 4S で 7ms でも辛い（オーディオ出力バッファのレイテンシーは標準で 23ms とあるが実際には 10ms であった。）
 #define AU_BUFFERING_SLOW_LATENCY                   0.046           // 昔の 0.023 から 0.0464399 に変更されてた。
 #define AU_BUFFERING_FAST_LATENCY                   0.005           // 4S で 7ms でも辛い（オーディオ出力バッファのレイテンシーは標準で 23ms とあるが実際には 10ms であった。）
+//#define AU_BUFFERING_FASTEST_LATENCY       0.001           //
 // ******************************************************
 #define MEASUREMENT                 ON              // ON
+#define ADMOB                       OFF             // OFF
+#define FFT_IMPROVE                 ON              // ON
 #define SUPPORT_IPAD                ON              // ON
 #define CENTERING                   ON              // ON
 
+#define DB_POWER                    OFF             // OFF  未実装部分あり。そもそもダメ
+#define DB_VOLT                     ON              // ON
+
 #define AUDIBLE_MULTIPLE_F          1000000.0       // 1000000.0 マイクを交えた 0dB は 20μPa(20x10^-6)
 
-#define CONSTRAINT_MAGIC            61.0
-
+#if DB_POWER
+#define FULL_DYNAMIC_RANGE_DECADE   16.0            // 16.0??
+#define AUDIBLE_DIVISER_LOG         -6              // -6
+#define AUDIBLE_DIVISER_LOG_F       -6.0            // -6.0
+#elif DB_VOLT // Active(Decade:8)
 #define FULL_DYNAMIC_RANGE_DECADE   8.0             // 16.0??
 #define FULL_DYNAMIC_RANGE_DECIBEL  160.0
+#endif
 
 #define SPL_DYNAMIC_RANGE_DECADE    6.0
 #define SPL_DYNAMIC_RANGE_DECIBEL   120.0
@@ -71,12 +84,19 @@
 #define PIANISSIMO                  0.000000000001      // -120db 1.0x10^-12 (可聴の一番小さい音)
 #define SILENT                      0.0000000000000001  // -160dB 1.0x10^-16 (無音状態)
 
-#define EFFECTIVE_FREQUENCY        10.0f            // 10.0f 従来 20Hzにしていたので低域での誤差が酷かった！！
+#define EFFECTIVE_FREQUENCY         10.0f           // 10.0f 従来 20Hzにしていたので低域での誤差が酷かった！！
+#define CUT_OFF_FREQUENCY           10.0f           // 10.0f
 
 #define STD_REFRESH_INTERVAL        0.05            // 0.05
 #define STD_RENDER_INTERVAL         0.05            // 0.05
+#define SMART_REFRESH               OFF             // ON にしたいが、一旦元に戻す。
+
+#define ALLOW_EDIT_TABBAR           ON
+#define HOLD_SELECTED_TABBAR_ITEM   ON
 
 // admob
+#define CONSTRAINT_MAGIC            61.0
+
 #ifdef DEBUG
 #define adMobUnitID1     @"ca-app-pub-3940256099942544/6300978111"  // 音声スペクトラムビュー
 #define adMobUnitID2     @"ca-app-pub-3940256099942544/6300978111"  // 音声スコープビュー
@@ -97,11 +117,28 @@
 #define adMobUnitID8     @"ca-app-pub-7364995006862208/7213727975"  // 磁界RMSビュー
 #endif
 
+#define CANT_ADMOB(portrait) (([[UserDefaults sharedManager] isIPhone4] || self.navigationController.navigationBar.frame.size.height > 0.0 || portrait == NO) && ([[UserDefaults sharedManager] isIPad] == NO && [[UserDefaults sharedManager] isLIPad] == NO))
+
 #ifdef DEBUG
 #define LOAD_DUMMY_DATA             0   // !!! 要注意
 #define SAVE_DUMMY_DATA             0   // !!! 要注意
 #define kDocumentPath               [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject]
 #define kBundlePath                 [[NSBundle mainBundle] bundlePath]
+#define ACCELO_SPECTRUM_FILE_NAME   @"ACCELO_SPECTRUM.xml"
+#define ACCELO_RMS_FILE_NAME        @"ACCELO_RMS.xml"
+#define ACCELO_SCOPE_FILE_NAME      @"ACCELO_SCOPE.xml"
+#define TESLA_SCOPE_FILE_NAME       @"TESLA_SCOPE.xml"
+#define TESLA_RMS_FILE_NAME         @"TESLA_RMS.xml"
+#define ACCELO_SPECTRUM_FILE_PATH   [kDocumentPath stringByAppendingPathComponent:ACCELO_SPECTRUM_FILE_NAME]
+#define ACCELO_RMS_FILE_PATH        [kDocumentPath stringByAppendingPathComponent:ACCELO_RMS_FILE_NAME]
+#define ACCELO_SCOPE_FILE_PATH      [kDocumentPath stringByAppendingPathComponent:ACCELO_SCOPE_FILE_NAME]
+#define TESLA_SCOPE_FILE_PATH       [kDocumentPath stringByAppendingPathComponent:TESLA_SCOPE_FILE_NAME]
+#define TESLA_RMS_FILE_PATH         [kDocumentPath stringByAppendingPathComponent:TESLA_RMS_FILE_NAME]
+#define ACCELO_SPECTRUM_BUNDLE_PATH [kBundlePath stringByAppendingPathComponent:ACCELO_SPECTRUM_FILE_NAME]
+#define ACCELO_RMS_BUNDLE_PATH      [kBundlePath stringByAppendingPathComponent:ACCELO_RMS_FILE_NAME]
+#define ACCELO_SCOPE_BUNDLE_PATH    [kBundlePath stringByAppendingPathComponent:ACCELO_SCOPE_FILE_NAME]
+#define TESLA_SCOPE_BUNDLE_PATH     [kBundlePath stringByAppendingPathComponent:TESLA_SCOPE_FILE_NAME]
+#define TESLA_RMS_BUNDLE_PATH       [kBundlePath stringByAppendingPathComponent:TESLA_RMS_FILE_NAME]
 #endif
 
 #define kWindowFunctionKey              @"Window Function"
