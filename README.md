@@ -30,7 +30,7 @@ You can use the data files by Files.app on iOS or iTunes File Sharing on Mac.</b
 Please note that the output file of Spectrogram is not small not like other data files.</br>
 
 ## for Progammers
-Despite this FFT analizer part is somewhat famous for detecting precise frequency stably in Japan, there's nothing special except for Lagrange interpolation. Please try to add Lagrange interpolation into your FFT code.
+Despite this FFT analizer part is somewhat famous for detecting precise frequency stably in Japan, there's nothing special except for Lagrange interpolation. Please try to add Lagrange interpolation into your own FFT code.
 
 ## Copyright
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
