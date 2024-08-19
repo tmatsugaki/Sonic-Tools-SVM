@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2024  Takuji Matsugaki
+    Copyright (C) 2017-2022  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -145,9 +145,9 @@ BOOL *accelometer_scope_freeze_p = nil;
                                                 
                                                 flushAcceloScopeCount++;
                                                 
-                                                Float32 x = -acceleration.x;
-                                                Float32 y = -acceleration.y;
-                                                Float32 z = -acceleration.z;
+                                                Float32 x = -acceleration.x; // Reverse
+                                                Float32 y = -acceleration.y; // Reverse
+                                                Float32 z = -acceleration.z; // Reverse
                                                 Float64 sumX = avgAcceloScopeRedValue * (flushAcceloScopeCount-1) + x;
                                                 Float64 sumY = avgAcceloScopeGreenValue * (flushAcceloScopeCount-1) + y;
                                                 Float64 sumZ = avgAcceloScopeBlueValue * (flushAcceloScopeCount-1) + z;

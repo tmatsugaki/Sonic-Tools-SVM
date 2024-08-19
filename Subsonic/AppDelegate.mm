@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2024  Takuji Matsugaki
+    Copyright (C) 2017-2022  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  */
 //
 //  AppDelegate.m
-//
 
 #import <StoreKit/SKStoreReviewController.h>
 #import "AppDelegate.h"
@@ -38,37 +37,6 @@
     [[UserDefaults sharedManager] initialize];
     
     [SKStoreReviewController requestReview];
-
-#if (LOAD_DUMMY_DATA && TARGET_IPHONE_SIMULATOR)
-/*
-ACCELO_SPECTRUM_FILE_PATH
-ACCELO_RMS_FILE_PATH
-ACCELO_SCOPE_FILE_PATH
-TESLA_SCOPE_FILE_PATH
-TESLA_RMS_FILE_PATH
-
-ACCELO_SPECTRUM_BUNDLE_PATH
-ACCELO_RMS_BUNDLE_PATH
-ACCELO_SCOPE_BUNDLE_PATH
-TESLA_SCOPE_BUNDLE_PATH
-TESLA_RMS_BUNDLE_PATH
-*/
-    if ([[NSFileManager defaultManager] fileExistsAtPath:ACCELO_SPECTRUM_FILE_PATH] == NO) {
-        [[NSFileManager defaultManager] copyItemAtPath:ACCELO_SPECTRUM_BUNDLE_PATH toPath:ACCELO_SPECTRUM_FILE_PATH error:nil];
-    }
-    if ([[NSFileManager defaultManager] fileExistsAtPath:ACCELO_RMS_FILE_PATH] == NO) {
-        [[NSFileManager defaultManager] copyItemAtPath:ACCELO_RMS_BUNDLE_PATH toPath:ACCELO_RMS_FILE_PATH error:nil];
-    }
-    if ([[NSFileManager defaultManager] fileExistsAtPath:ACCELO_SCOPE_FILE_PATH] == NO) {
-        [[NSFileManager defaultManager] copyItemAtPath:ACCELO_SCOPE_BUNDLE_PATH toPath:ACCELO_SCOPE_FILE_PATH error:nil];
-    }
-    if ([[NSFileManager defaultManager] fileExistsAtPath:TESLA_SCOPE_FILE_PATH] == NO) {
-        [[NSFileManager defaultManager] copyItemAtPath:TESLA_SCOPE_BUNDLE_PATH toPath:TESLA_SCOPE_FILE_PATH error:nil];
-    }
-    if ([[NSFileManager defaultManager] fileExistsAtPath:TESLA_RMS_FILE_PATH] == NO) {
-        [[NSFileManager defaultManager] copyItemAtPath:TESLA_RMS_BUNDLE_PATH toPath:TESLA_RMS_FILE_PATH error:nil];
-    }
-#endif
     return YES;
 }
 

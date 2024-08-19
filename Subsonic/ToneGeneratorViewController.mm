@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2024  Takuji Matsugaki
+    Copyright (C) 2017-2022  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  */
 //
 //  ToneGeneratorViewController.m
-//
 
 #import <AudioToolbox/AudioToolbox.h>
 #import "definitions.h"
@@ -51,7 +50,7 @@ OSStatus renderTone(
 // desc: setup Audio Unit Remote I/O
 //-----------------------------------------------------------------------------
 static bool setupRemoteIO( AudioUnit & inRemoteIOUnit, AURenderCallbackStruct inRenderProc,
-                   AudioStreamBasicDescription & outASBD)
+                   AudioStreamBasicDescription & outASBD )
 {
     // open the output unit
     AudioComponentDescription desc;
@@ -63,7 +62,7 @@ static bool setupRemoteIO( AudioUnit & inRemoteIOUnit, AURenderCallbackStruct in
     desc.componentFlagsMask = 0;
     
     // find next component
-    AudioComponent defaultOutput = AudioComponentFindNext(NULL, &desc);
+    AudioComponent defaultOutput = AudioComponentFindNext( NULL, &desc );
     
     // status code
     OSStatus err;
@@ -72,8 +71,8 @@ static bool setupRemoteIO( AudioUnit & inRemoteIOUnit, AURenderCallbackStruct in
     AudioStreamBasicDescription localASBD;
     
     // open remote I/O unit
-    err = AudioComponentInstanceNew(defaultOutput, &inRemoteIOUnit);
-    if (err)
+    err = AudioComponentInstanceNew( defaultOutput, &inRemoteIOUnit );
+    if( err )
     {
         // TODO: "couldn't open the remote I/O unit"
         return false;
@@ -82,47 +81,18 @@ static bool setupRemoteIO( AudioUnit & inRemoteIOUnit, AURenderCallbackStruct in
 #if 0
     UInt32 one = 1;
     // enable input
-    err = AudioUnitSetProperty(inRemoteIOUnit, kAudioOutputUnitProperty_EnableIO,
-                               kAudioUnitScope_Input, 1, &one, sizeof(one));
-    if (err)
+    err = AudioUnitSetProperty( inRemoteIOUnit, kAudioOutputUnitProperty_EnableIO,
+                               kAudioUnitScope_Input, 1, &one, sizeof(one) );
+    if( err )
     {
         // TODO: "couldn't enable input on the remote I/O unit"
         return false;
     }
     
     // set render proc
-    err = AudioUnitSetProperty(inRemoteIOUnit, kAudioUnitProperty_SetRenderCallback,
-                               kAudioUnitScope_Input, 0, &inRenderProc, sizeof(inRenderProc));
-    if (err)
-    {
-        // TODO: "couldn't set remote i/o render callback"
-        return false;
-    }
-    
-    UInt32 size = sizeof(localASBD);
-    // get and set client format
-    err = AudioUnitGetProperty(inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
-                               kAudioUnitScope_Input, 0, &localASBD, &size);
-    if (err)
-    {
-        // TODO: "couldn't get the remote I/O unit's output client format"
-        return false;
-    }
-#else
-    UInt32 one = 1;
-    // enable input
-    err = AudioUnitSetProperty(inRemoteIOUnit, kAudioOutputUnitProperty_EnableIO,
-                               kAudioUnitScope_Output, 1, &one, sizeof(one));
-    if (err)
-    {
-        // TODO: "couldn't enable input on the remote I/O unit"
-        return false;
-    }
-    
-    // set render proc
-    err = AudioUnitSetProperty(inRemoteIOUnit, kAudioUnitProperty_SetRenderCallback,
-                               kAudioUnitScope_Output, 0, &inRenderProc, sizeof(inRenderProc));
-    if (err)
+    err = AudioUnitSetProperty( inRemoteIOUnit, kAudioUnitProperty_SetRenderCallback,
+                               kAudioUnitScope_Input, 0, &inRenderProc, sizeof(inRenderProc) );
+    if( err )
     {
         // TODO: "couldn't set remote i/o render callback"
         return false;
@@ -131,8 +101,37 @@ static bool setupRemoteIO( AudioUnit & inRemoteIOUnit, AURenderCallbackStruct in
     UInt32 size = sizeof(localASBD);
     // get and set client format
     err = AudioUnitGetProperty( inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
-                               kAudioUnitScope_Output, 0, &localASBD, &size);
-    if (err)
+                               kAudioUnitScope_Input, 0, &localASBD, &size );
+    if( err )
+    {
+        // TODO: "couldn't get the remote I/O unit's output client format"
+        return false;
+    }
+#else
+    UInt32 one = 1;
+    // enable input
+    err = AudioUnitSetProperty( inRemoteIOUnit, kAudioOutputUnitProperty_EnableIO,
+                               kAudioUnitScope_Output, 1, &one, sizeof(one) );
+    if( err )
+    {
+        // TODO: "couldn't enable input on the remote I/O unit"
+        return false;
+    }
+    
+    // set render proc
+    err = AudioUnitSetProperty( inRemoteIOUnit, kAudioUnitProperty_SetRenderCallback,
+                               kAudioUnitScope_Output, 0, &inRenderProc, sizeof(inRenderProc) );
+    if( err )
+    {
+        // TODO: "couldn't set remote i/o render callback"
+        return false;
+    }
+    
+    UInt32 size = sizeof(localASBD);
+    // get and set client format
+    err = AudioUnitGetProperty( inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
+                               kAudioUnitScope_Output, 0, &localASBD, &size );
+    if( err )
     {
         // TODO: "couldn't get the remote I/O unit's output client format"
         return false;
@@ -161,8 +160,8 @@ static bool setupRemoteIO( AudioUnit & inRemoteIOUnit, AURenderCallbackStruct in
     
     // set stream property
     err = AudioUnitSetProperty( inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
-                               kAudioUnitScope_Input, 0, &localASBD, sizeof(localASBD));
-    if (err)
+                               kAudioUnitScope_Input, 0, &localASBD, sizeof(localASBD) );
+    if( err )
     {
         // TODO: "couldn't set the remote I/O unit's input client format"
         return false;
@@ -170,27 +169,27 @@ static bool setupRemoteIO( AudioUnit & inRemoteIOUnit, AURenderCallbackStruct in
     
     size = sizeof(outASBD);
     // get it again
-    err = AudioUnitGetProperty(inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
-                               kAudioUnitScope_Input, 0, &outASBD, &size);
-    if (err)
+    err = AudioUnitGetProperty( inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
+                               kAudioUnitScope_Input, 0, &outASBD, &size );
+    if( err )
     {
         // TODO: "couldn't get the remote I/O unit's output client format"
         return false;
     }
     err = AudioUnitSetProperty( inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
-                               kAudioUnitScope_Output, 1, &outASBD, sizeof(outASBD));
-    if (err)
+                               kAudioUnitScope_Output, 1, &outASBD, sizeof(outASBD) );
+    if( err )
     {
         // TODO: "couldn't set the remote I/O unit's input client format"
         return false;
     }
     // print the format
-    // printf( "format for remote i/o:\n");
+    // printf( "format for remote i/o:\n" );
     // outFormat.Print();
     
     // initialize remote I/O unit
-    err = AudioUnitInitialize(inRemoteIOUnit);
-    if (err)
+    err = AudioUnitInitialize( inRemoteIOUnit );
+    if( err )
     {
         // TODO: "couldn't initialize the remote I/O unit"
         return false;
@@ -214,8 +213,8 @@ static void rioInterruptionListener(ToneGeneratorViewController *inClientData, U
 // name: propListener()
 // desc: audio session property listener
 //-----------------------------------------------------------------------------
-static void propListener(void * inClientData, AudioSessionPropertyID inID,
-                         UInt32 inDataSize, const void * inData)
+static void propListener( void * inClientData, AudioSessionPropertyID inID,
+                         UInt32 inDataSize, const void * inData )
 {
     NSDictionary *routeDictionary = (__bridge NSDictionary *)inData;
     NSInteger reason = ((NSNumber *) [routeDictionary objectForKey:((NSString *) CFSTR(kAudioSession_AudioRouteChangeKey_Reason))]).intValue;
@@ -251,27 +250,27 @@ static void propListener(void * inClientData, AudioSessionPropertyID inID,
     }
 
     // detect audio route change
-    if (inID == kAudioSessionProperty_AudioRouteChange)
+    if( inID == kAudioSessionProperty_AudioRouteChange )
     {
         // status code
         OSStatus err;
         
         // if there was a route change, we need to dispose the current rio unit and create a new one
-        err = AudioComponentInstanceDispose(m_au);
-        if (err)
+        err = AudioComponentInstanceDispose( m_au );
+        if( err )
         {
             // TODO: "couldn't dispose remote i/o unit"
             return;
         }
         
         // set up
-        setupRemoteIO(m_au, m_renderProc, m_dataFormat);
+        setupRemoteIO( m_au, m_renderProc, m_dataFormat );
         
         UInt32 size = sizeof(m_hwSampleRate);
         // get sample rate
-        err = AudioSessionGetProperty(kAudioSessionProperty_CurrentHardwareSampleRate,
-                                      &size, &m_hwSampleRate);
-        if (err)
+        err = AudioSessionGetProperty( kAudioSessionProperty_CurrentHardwareSampleRate,
+                                      &size, &m_hwSampleRate );
+        if( err )
         {
             // TODO: "couldn't get new sample rate"
             return;
@@ -281,8 +280,8 @@ static void propListener(void * inClientData, AudioSessionPropertyID inID,
 //        MoAudio::checkInput();
         
         // start audio unit
-        err = AudioOutputUnitStart(m_au);
-        if (err)
+        err = AudioOutputUnitStart( m_au );
+        if( err )
         {
             // TODO: "couldn't start unit"
             return;
@@ -291,29 +290,29 @@ static void propListener(void * inClientData, AudioSessionPropertyID inID,
         // get route
         CFStringRef newRoute;
         size = sizeof(CFStringRef);
-        err = AudioSessionGetProperty(kAudioSessionProperty_AudioRoute, &size, &newRoute);
-        if (err)
+        err = AudioSessionGetProperty( kAudioSessionProperty_AudioRoute, &size, &newRoute );
+        if( err )
         {
             // TODO: "couldn't get new audio route"
             return;
         }
         
         // check route
-        if (newRoute)
+        if( newRoute )
         {
-            // CFShow(newRoute);
-            if (CFStringCompare(newRoute, CFSTR("Headset"), NULL) == kCFCompareEqualTo)
+            // CFShow( newRoute );
+            if( CFStringCompare( newRoute, CFSTR("Headset"), NULL ) == kCFCompareEqualTo )
             { }
-            else if (CFStringCompare(newRoute, CFSTR("Receiver"), NULL) == kCFCompareEqualTo)
+            else if( CFStringCompare( newRoute, CFSTR("Receiver" ), NULL ) == kCFCompareEqualTo )
             { }
-            else if (CFStringCompare(newRoute, CFSTR("ReceiverAndMicrophone"), NULL) == kCFCompareEqualTo)
+            else if( CFStringCompare( newRoute, CFSTR("ReceiverAndMicrophone" ), NULL ) == kCFCompareEqualTo )
             { /* イヤホン */
                 UInt32 audioRouteOverride = kAudioSessionOverrideAudioRoute_Speaker;
                 AudioSessionSetProperty (kAudioSessionProperty_OverrideAudioRoute,
                                          sizeof(audioRouteOverride),
                                          &audioRouteOverride);
             }
-            else if (CFStringCompare(newRoute, CFSTR("SpeakerAndMicrophone"), NULL) == kCFCompareEqualTo)
+            else if( CFStringCompare( newRoute, CFSTR("SpeakerAndMicrophone" ), NULL ) == kCFCompareEqualTo )
             { /* デフォルト */ }
             else // unknown
             { }
@@ -454,19 +453,15 @@ OSStatus renderTone(
     {
 #if 1
 //        UInt32 sessionCategory = kAudioSessionCategory_MediaPlayback; // オリジナル
-        // momu の方式に合わせたけど、ReceiverAndMicrophone という扱いになって
-        // kAudioSessionRouteChangeReason_CategoryChange が発生する。
+        // momu の方式に合わせたけど、ReceiverAndMicrophone という扱いになって kAudioSessionRouteChangeReason_CategoryChange が発生する。
         UInt32 sessionCategory = kAudioSessionCategory_PlayAndRecord;
         AudioSessionSetProperty(kAudioSessionProperty_AudioCategory, sizeof(sessionCategory), &sessionCategory);
 #endif
     }
-#if 0 // momu に任す。
-#if OLD
-    AudioSessionSetActive(true);
-#else
+#if 0
+//    AudioSessionSetActive(true); // momu に任す。
     NSError *activationError = nil;
     [[AVAudioSession sharedInstance] setActive: YES error: &activationError];
-#endif
 #endif
     
     _frequncy.delegate = self;
@@ -565,7 +560,7 @@ OSStatus renderTone(
                                 sizeof(AudioStreamBasicDescription));
     NSAssert1(err == noErr, @"Error setting stream format: %hd", err);
     // set property listener
-//    err = AudioSessionAddPropertyListener(kAudioSessionProperty_AudioRouteChange, propListener, NULL);
+//    err = AudioSessionAddPropertyListener( kAudioSessionProperty_AudioRouteChange, propListener, NULL );
 //    NSAssert1(err == noErr, @"Error setting stream format: %hd", err);
 }
 

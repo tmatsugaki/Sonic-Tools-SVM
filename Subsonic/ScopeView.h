@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2024  Takuji Matsugaki
+    Copyright (C) 2017-2022  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  */
 //
 //  ScopeView.h
-//
 
 #import <UIKit/UIKit.h>
 #import "definitions.h"
@@ -25,31 +24,16 @@
 #import "SevenSegmentDisplayView.h"
 #import "FFTView.h"
 #import "FFTScopeSettings.h"
-
-#define QUEUE                       ON                  // ON
 /*
  * FFT サンプリングレートなど
  */
 #define SCOPE_NUMCHANNELS           FFT_NUMCHANNELS     // 2:
-#if (FFT_IMPROVE == OFF)
-#define SCOPE_CHUNK_SIZE            256                 // 256:
-#else
-// 正
-#if QUEUE
 #define SCOPE_CHUNK_SIZE            2048                // 2048: 2048にしただけでは駄目だったので、FFT_FRAMESIZE を 512 → 2048 にしたところ安定化した！？ TAK on Jun 5th, 2017
-#else
-#define SCOPE_CHUNK_SIZE            1024                // 2048: 2048にしただけでは駄目だったので、FFT_FRAMESIZE を 512 → 2048 にしたところ安定化した！？ TAK on Jun 5th, 2017
-#endif
-#endif
 #define DEFAULT_VOLT_RANGE          4.0                 // 10m[Pa|FS] のレンジ
 /*
  * 描画用バッファ
  */
-#if QUEUE
 #define SCOPE_BUFFER_SIZE           1024                // 512: 1024 辺りが描画の限界で
-#else
-#define SCOPE_BUFFER_SIZE           SCOPE_CHUNK_SIZE    // 512: 1024 辺りが描画の限界で
-#endif
 
 @protocol ScopeViewProtocol <NSObject>
 

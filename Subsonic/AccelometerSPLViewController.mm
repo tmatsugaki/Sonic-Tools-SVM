@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2024  Takuji Matsugaki
+    Copyright (C) 2017-2022  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  */
 //
 //  AccelometerSPLViewController.m
-//
 
 #import "AccelometerSPLViewController.h"
 #include "FFTHelper.hh"
@@ -26,8 +25,6 @@
 static unsigned long long accelometerSPLBufferFillIndex = 0;
 
 #import "FFTHelper.hh"
-
-//#undef SMART_REFRESH
 
 #pragma mark - Accelometer
 
@@ -84,18 +81,6 @@ BOOL *accelometer_spl_freeze_p = nil;
         Float64 sumX = avgAcceloSPLRedValue * (flushAcceloSPLCount-1) + x;
         Float64 sumY = avgAcceloSPLGreenValue * (flushAcceloSPLCount-1) + y;
         Float64 sumZ = avgAcceloSPLBlueValue * (flushAcceloSPLCount-1) + z;
-
-        if ([[NSFileManager defaultManager] fileExistsAtPath:ACCELO_RMS_FILE_PATH]) {
-            NSArray *arr = [NSArray arrayWithContentsOfFile:ACCELO_RMS_FILE_PATH];
-            NSUInteger i = 0;
-            
-            x = ((NSNumber *) arr[i++]).floatValue;
-            y = ((NSNumber *) arr[i++]).floatValue;
-            z = ((NSNumber *) arr[i++]).floatValue;
-            sumX = ((NSNumber *) arr[i++]).doubleValue;
-            sumY = ((NSNumber *) arr[i++]).doubleValue;
-            sumZ = ((NSNumber *) arr[i++]).doubleValue;
-        }
         //
         if (maxAcceloSPLRedValue < x) {
             maxAcceloSPLRedValue = x;
@@ -177,7 +162,6 @@ BOOL *accelometer_spl_freeze_p = nil;
     [motionManager startAccelerometerUpdatesToQueue:queue
                                         withHandler:^(CMAccelerometerData *accelerometerData, NSError *error) {
 
-#if SMART_REFRESH
                                             if (*accelometer_spl_freeze_p == NO) {
                                                 CMAcceleration acceleration = accelerometerData.acceleration;
                                                 
@@ -189,92 +173,6 @@ BOOL *accelometer_spl_freeze_p = nil;
                                                 Float64 sumX = avgAcceloSPLRedValue * (flushAcceloSPLCount-1) + x;
                                                 Float64 sumY = avgAcceloSPLGreenValue * (flushAcceloSPLCount-1) + y;
                                                 Float64 sumZ = avgAcceloSPLBlueValue * (flushAcceloSPLCount-1) + z;
-                                                
-                                                //
-                                                if (maxAcceloSPLRedValue < x) {
-                                                    maxAcceloSPLRedValue = x;
-                                                }
-                                                if (x && minAcceloSPLRedValue > x) {
-                                                    minAcceloSPLRedValue = x;
-                                                }
-                                                avgAcceloSPLRedValue = sumX / ((Float64) flushAcceloSPLCount);
-                                                //
-                                                if (maxAcceloSPLGreenValue < y) {
-                                                    maxAcceloSPLGreenValue = y;
-                                                }
-                                                if (y && minAcceloSPLGreenValue > y) {
-                                                    minAcceloSPLGreenValue = y;
-                                                }
-                                                avgAcceloSPLGreenValue = sumY / ((Float64) flushAcceloSPLCount);
-                                                //
-                                                if (maxAcceloSPLBlueValue < z) {
-                                                    maxAcceloSPLBlueValue = z;
-                                                }
-                                                if (z && minAcceloSPLBlueValue > z) {
-                                                    minAcceloSPLBlueValue = z;
-                                                }
-                                                avgAcceloSPLBlueValue = sumZ / ((Float64) flushAcceloSPLCount);
-                                                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-                                                    Float32 rmsValue = sqrt((x * x + y * y + z * z) / 1.0);
-                                                    
-                                                    //                                                    DEBUG_LOG(@"X:%g, Y:%g, Z:%g [%g]", x, y, z, rmsValue);
-                                                    
-                                                    // リングバッファにデータを1つ追加する。
-                                                    [accelometer_spl_view enqueueData:rmsValue];
-                                                    
-                                                    accelometer_spl_view.rmsValue = rmsValue;
-                                                    accelometer_spl_view.maxRMS = sqrt((maxAcceloSPLRedValue   * maxAcceloSPLRedValue +
-                                                                                       maxAcceloSPLGreenValue * maxAcceloSPLGreenValue +
-                                                                                       maxAcceloSPLBlueValue  * maxAcceloSPLBlueValue) / 1.0);
-                                                    accelometer_spl_view.avgRMS = sqrt((avgAcceloSPLRedValue   * avgAcceloSPLRedValue +
-                                                                                       avgAcceloSPLGreenValue * avgAcceloSPLGreenValue +
-                                                                                       avgAcceloSPLBlueValue  * avgAcceloSPLBlueValue) / 1.0);
-                                                    accelometer_spl_view.minRMS = sqrt((minAcceloSPLRedValue   * minAcceloSPLRedValue +
-                                                                                       minAcceloSPLGreenValue * minAcceloSPLGreenValue +
-                                                                                       minAcceloSPLBlueValue  * minAcceloSPLBlueValue) / 1.0);
-                                                });
-                                            }
-                                            accelometerSPLBufferFillIndex++;
-#else
-                                            if (*accelometer_spl_freeze_p == NO) {
-                                                CMAcceleration acceleration = accelerometerData.acceleration;
-                                                
-                                                flushAcceloSPLCount++;
-                                                
-                                                Float32 x = ABS(acceleration.x);
-                                                Float32 y = ABS(acceleration.y);
-                                                Float32 z = ABS(acceleration.z);
-                                                Float64 sumX = avgAcceloSPLRedValue * (flushAcceloSPLCount-1) + x;
-                                                Float64 sumY = avgAcceloSPLGreenValue * (flushAcceloSPLCount-1) + y;
-                                                Float64 sumZ = avgAcceloSPLBlueValue * (flushAcceloSPLCount-1) + z;
-#if (SAVE_DUMMY_DATA && !TARGET_IPHONE_SIMULATOR)
-                                                [[NSFileManager defaultManager] removeItemAtPath:ACCELO_RMS_FILE_PATH error:nil];
-                                                if ([[NSFileManager defaultManager] fileExistsAtPath:ACCELO_RMS_FILE_PATH] == NO) {
-                                                    NSMutableArray *arr = [[NSMutableArray alloc] init];
-                                                    
-                                                    [arr addObject:[NSNumber numberWithFloat:x]];
-                                                    [arr addObject:[NSNumber numberWithFloat:y]];
-                                                    [arr addObject:[NSNumber numberWithFloat:z]];
-                                                    [arr addObject:[NSNumber numberWithDouble:sumX]];
-                                                    [arr addObject:[NSNumber numberWithDouble:sumY]];
-                                                    [arr addObject:[NSNumber numberWithDouble:sumZ]];
-                                                    [arr writeToFile:ACCELO_RMS_FILE_PATH atomically:YES];
-                                                }
-                                                //#elif (TARGET_IPHONE_SIMULATOR)
-#elif (LOAD_DUMMY_DATA && TARGET_IPHONE_SIMULATOR)
-// このパスは通過しない。
-                                                if ([[NSFileManager defaultManager] fileExistsAtPath:ACCELO_RMS_FILE_PATH]) {
-                                                    NSArray *arr = [NSArray arrayWithContentsOfFile:ACCELO_RMS_FILE_PATH];
-                                                    NSUInteger i = 0;
-                                                    
-                                                    x = ((NSNumber *) arr[i++]).floatValue;
-                                                    y = ((NSNumber *) arr[i++]).floatValue;
-                                                    z = ((NSNumber *) arr[i++]).floatValue;
-                                                    sumX = ((NSNumber *) arr[i++]).doubleValue;
-                                                    sumY = ((NSNumber *) arr[i++]).doubleValue;
-                                                    sumZ = ((NSNumber *) arr[i++]).doubleValue;
-                                                }
-#endif
                                                 //
                                                 if (maxAcceloSPLRedValue < x) {
                                                     maxAcceloSPLRedValue = x;
@@ -330,7 +228,6 @@ BOOL *accelometer_spl_freeze_p = nil;
                                                 DEBUG_LOG(@"%s レイテンシーが小さすぎ！", __func__);
                                             }
                                             accelometerSPLBufferFillIndex++;
-#endif
                                         }];
 }
 
@@ -360,7 +257,7 @@ BOOL *accelometer_spl_freeze_p = nil;
     _accelometerSPLView.playPauseSwitch.hidden = NO;
 #endif
 
-#if (SMART_REFRESH || LOAD_DUMMY_DATA)
+#if LOAD_DUMMY_DATA
     self.refreshTimer = [NSTimer scheduledTimerWithTimeInterval:REFRESH_INTERVAL target:self selector:@selector(postUpdate) userInfo:nil repeats:YES];
 #endif
     if (self.navigationController) {
@@ -385,16 +282,6 @@ BOOL *accelometer_spl_freeze_p = nil;
     }
     // VFD の G とラベルの重なりをなくす。
     self.accelometerSPLView.lblG.hidden = (([[UserDefaults sharedManager] isIPhone4] || [[UserDefaults sharedManager] isIPhone5]) && [[UserDefaults sharedManager] isPortrait]);
-
-#if (AUTO_LAYOUT && ADMOB)
-    // AdMob のセットアップ準備
-    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
-        _contentConstraint.constant = CONSTRAINT_MAGIC + [self getAdmobAdHeight];
-        DEBUG_LOG(@"%g", _contentConstraint.constant);
-    } else {
-        _contentConstraint.constant = CONSTRAINT_MAGIC;
-    }
-#endif
 }
 
 - (void) viewDidAppear:(BOOL)animated {
@@ -402,37 +289,6 @@ BOOL *accelometer_spl_freeze_p = nil;
     
     _freeze = NO;
     [self setLedMeasuring:_freeze == NO];
-
-#if 0
-    if ([Environment isIPhone4] == NO && _banner == nil) {
-#if ADMOB
-        // バナーのビューを作成する
-        // 利用可能な広告サイズの定数値は GADAdSize.h で定義されている
-        self.banner = [[GADBannerView alloc] initWithAdSize:kGADAdSizeSmartBannerPortrait];
-        self.banner.adUnitID = adUnitID;
-        self.banner.rootViewController = self;
-        
-        [self.bannerView addSubview:_banner];
-        
-        GADRequest *request = [GADRequest request];
-        request.testDevices = @[kGADSimulatorID,                        // All simulators
-                                @"61ed1e6cd70d2e8e96a7b510d0fb046d",    // iPhone4S
-                                @"36ac939f89d79e5ae69bc57bd867a53f",    // iPhone6
-                                @"cfed5cdc6473318d42ca243a060d5412",    // iPad2
-                                @"a829960a38bdff398c3be9ab1fbb1285"];   // iPhone7
-        [self.banner loadRequest:request];
-#endif
-    }
-#else
-
-#if (ADMOB == ON)
-    // AdMob のセットアップ
-    [self setupAdmob:adMobUnitID6];
-    if (self.banner.adSize.size.width != self.view.frame.size.width) {
-        [self setupAdmobFor_iPad:adMobUnitID6];
-    }
-#endif
-#endif
 }
 
 - (void) viewWillDisappear:(BOOL)animated {
@@ -460,14 +316,6 @@ BOOL *accelometer_spl_freeze_p = nil;
     // maintainPinch を実行する。
     [self.accelometerSPLView setNeedsLayout];
 
-#if (ADMOB == ON)
-    // AdMob のセットアップ
-    [self setupAdmobFor_iPad:adMobUnitID6];
-    // バナービューの表示制御
-#if AUTO_LAYOUT
-    _contentConstraint.constant = CONSTRAINT_MAGIC;
-#endif
-#endif
     // VFD の G とラベルの重なりをなくす。
     self.accelometerSPLView.lblG.hidden = (([[UserDefaults sharedManager] isIPhone4] || [[UserDefaults sharedManager] isIPhone5]) && [[UserDefaults sharedManager] isPortrait]);
 }
@@ -478,16 +326,7 @@ BOOL *accelometer_spl_freeze_p = nil;
     self.toPortrait = (size.width < size.height);
 
     // maintainPinch を実行する。
-    [self.accelometerSPLView setNeedsLayout];
-    
-#if (ADMOB == ON)
-    // AdMob のセットアップ
-    [self setupAdmobFor_iPad:adMobUnitID6];
-    // バナービューの表示制御
-#if AUTO_LAYOUT
-    _contentConstraint.constant = CONSTRAINT_MAGIC;
-#endif
-#endif
+    [self.accelometerSPLView setNeedsLayout];    
     // VFD の G とラベルの重なりをなくす。
     self.accelometerSPLView.lblG.hidden = (([[UserDefaults sharedManager] isIPhone4] || [[UserDefaults sharedManager] isIPhone5]) && [[UserDefaults sharedManager] isPortrait]);
 }
@@ -498,12 +337,6 @@ BOOL *accelometer_spl_freeze_p = nil;
     
     // maintainPinch を実行する。
     [self.accelometerSPLView setNeedsLayout];
-    // バナービューの表示制御
-#if (AUTO_LAYOUT && ADMOB)
-    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
-        _contentConstraint.constant = CONSTRAINT_MAGIC + [self getAdmobAdHeight];
-    }
-#endif
     // VFD の G とラベルの重なりをなくす。
     self.accelometerSPLView.lblG.hidden = (([[UserDefaults sharedManager] isIPhone4] || [[UserDefaults sharedManager] isIPhone5]) && [[UserDefaults sharedManager] isPortrait]);
 }
@@ -513,12 +346,6 @@ BOOL *accelometer_spl_freeze_p = nil;
 
     // maintainPinch を実行する。
     [self.accelometerSPLView setNeedsLayout];
-    // バナービューの表示制御
-#if (AUTO_LAYOUT && ADMOB)
-    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
-        _contentConstraint.constant = CONSTRAINT_MAGIC + [self getAdmobAdHeight];
-    }
-#endif
     // VFD の G とラベルの重なりをなくす。
     self.accelometerSPLView.lblG.hidden = (([[UserDefaults sharedManager] isIPhone4] || [[UserDefaults sharedManager] isIPhone5]) && [[UserDefaults sharedManager] isPortrait]);
 }

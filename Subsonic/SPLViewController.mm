@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2024  Takuji Matsugaki
+    Copyright (C) 2017-2022  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  */
 //
 //  ThirdViewController.m
-//
 
 #import <QuartzCore/QuartzCore.h>
 #import <Accelerate/Accelerate.h>
@@ -60,6 +59,7 @@ static void initializeSPLAccumulator() {
     splAccumulator = (Float32 *) malloc([UserDefaults sharedManager].numChannels * sizeof(Float32)*splAccumulatorDataLength);
     splAccumulatorFillIndex = 0;
 }
+
 static void destroySPLAccumulator() {
     if (splAccumulator!=NULL) {
         free(splAccumulator);
@@ -67,7 +67,6 @@ static void destroySPLAccumulator() {
     }
     splAccumulatorFillIndex = 0;
 }
-#pragma unused(destroySPLAccumulator)
 
 static BOOL splAccumulateFrames(Float32 *frames, UInt32 length) { //returned YES if full, NO otherwise.
     BOOL rc = NO;
@@ -110,62 +109,15 @@ void SPLAudioCallback(Float32 *buffer, UInt32 frameSize, void * userData)
 //        DEBUG_LOG(@"%@", [NSDate date]);
         flushSPLCount++;
         
-#if SMART_REFRESH
-        if (*spl_freeze_p == NO) {
-            // 負荷によってはフリッカーが出るので、dispatch_async 辞めた。
-            //                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-            //=========================================
-            Float32 rmsValue = PIANISSIMO;
-#if (RMS == OFF)
-            // Spectrogram と同じで MS っぽい。
-            vDSP_vsq(buffer, 1, buffer, 1, frameSize);
-            vDSP_meanv(buffer, 1, &rmsValue, frameSize);
-#else
-            // RMS
-            vDSP_measqv(buffer, 1, &rmsValue, frameSize);
-            rmsValue = sqrtf(rmsValue);
-#endif
-            // リングバッファにデータを1つ追加する。
-            [spl_view enqueueData:rmsValue];
-            if (rmsValue < minSPLValue) {
-                minSPLValue = rmsValue;
-            }
-            if (rmsValue > maxSPLValue) {
-                maxSPLValue = rmsValue;
-            }
-            Float32 sum = (avgSPLValue * flushSPLCount) + rmsValue;
-            Float32 avg = sum / (flushSPLCount + 1);
-            avgSPLValue = avg;
-            
-            spl_view.rmsValue = rmsValue;
-            spl_view.minValue = minSPLValue;
-            spl_view.maxValue = maxSPLValue;
-            spl_view.avgValue = avgSPLValue;
-            emptySPLAccumulator(); //empty the accumulator when finished
-            //                });
-        } else {
-            emptySPLAccumulator(); //empty the accumulator when finished
-        }
-#else
         if (*spl_freeze_p == NO) {
             //=========================================
             Float32 rmsValue = PIANISSIMO;
 #if (RMS == OFF)
             // Spectrogram と同じで MS っぽい。
-#if 0
-            vDSP_vsq(buffer, 1, buffer, 1, frameSize);
-            vDSP_meanv(buffer, 1, &rmsValue, frameSize);
-#else
             vDSP_measqv(buffer, 1, &rmsValue, frameSize);
-#endif
 #else
             // RMS
-#if 0
-            vDSP_measqv(buffer, 1, &rmsValue, frameSize);
-            rmsValue = sqrtf(rmsValue);
-#else
             vDSP_rmsqv(buffer, 1, &rmsValue, frameSize);
-#endif
 #endif
             // リングバッファにデータを1つ追加する。
             [spl_view enqueueData:rmsValue];
@@ -204,7 +156,6 @@ void SPLAudioCallback(Float32 *buffer, UInt32 frameSize, void * userData)
             DEBUG_LOG(@"%s レイテンシーが小さすぎ！", __func__);
         }
         emptySPLAccumulator(); //empty the accumulator when finished
-#endif
     }
     memset(buffer, 0, sizeof(Float32)*frameSize * numChannels);
 }
@@ -284,9 +235,6 @@ void SPLAudioCallback(Float32 *buffer, UInt32 frameSize, void * userData)
     // 6:0
     // 0.008
 
-#if SMART_REFRESH
-    self.refreshTimer = [NSTimer scheduledTimerWithTimeInterval:REFRESH_INTERVAL target:self selector:@selector(postUpdate) userInfo:nil repeats:YES];
-#endif
     AVAudioSession *session = [AVAudioSession sharedInstance];
     if ([session respondsToSelector:@selector(requestRecordPermission:)]) {
         [session performSelector:@selector(requestRecordPermission:) withObject:^(BOOL granted) {
@@ -328,15 +276,6 @@ void SPLAudioCallback(Float32 *buffer, UInt32 frameSize, void * userData)
     // VFD の dB とラベルの重なりをなくす。
     self.splView.dbLabel.hidden = (([[UserDefaults sharedManager] isIPhone4] || [[UserDefaults sharedManager] isIPhone5]) && [[UserDefaults sharedManager] isPortrait]);
 
-#if (AUTO_LAYOUT && ADMOB)
-    // AdMob のセットアップ準備
-    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
-        _contentConstraint.constant = CONSTRAINT_MAGIC + [self getAdmobAdHeight];
-        DEBUG_LOG(@"%g", _contentConstraint.constant);
-    } else {
-        _contentConstraint.constant = CONSTRAINT_MAGIC;
-    }
-#endif
     _splView.gainLabel.text = NSLocalizedString(@"Mic Gain", @"");
     _splView.gainSlider.minimumValue = 0.0; // 10^(0)=0dB 0〜40dB に変更した。May 25, 2021
     _splView.gainSlider.value = [[NSUserDefaults standardUserDefaults] floatForKey:kMicGainKey];
@@ -361,14 +300,6 @@ void SPLAudioCallback(Float32 *buffer, UInt32 frameSize, void * userData)
     } else {// とりあえず設定しないと落ちる。
         MoAudio::m_callback = SPLAudioCallback;
     }
-
-#if (ADMOB == ON)
-    // AdMob のセットアップ
-    [self setupAdmob:adMobUnitID3];
-    if (self.banner.adSize.size.width != self.view.frame.size.width) {
-        [self setupAdmobFor_iPad:adMobUnitID3];
-    }
-#endif
 }
 
 - (void) viewWillDisappear:(BOOL)animated {
@@ -385,23 +316,6 @@ void SPLAudioCallback(Float32 *buffer, UInt32 frameSize, void * userData)
 #endif
 }
 
-#if 0
-- (void) willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation
-                                 duration:(NSTimeInterval)duration
-{
-    self.toPortrait = (toInterfaceOrientation == UIInterfaceOrientationPortrait || toInterfaceOrientation == UIInterfaceOrientationPortraitUpsideDown);
-    
-    // maintainPinch を実行する。
-    [self.splView setNeedsLayout];
-
-    // VFD の dB とラベルの重なりをなくす。
-    self.splView.dbLabel.hidden = (([[UserDefaults sharedManager] isIPhone4] || [[UserDefaults sharedManager] isIPhone5]) && [[UserDefaults sharedManager] isPortrait]);
-    // バナービューの表示制御
-#if AUTO_LAYOUT
-    _contentConstraint.constant = CONSTRAINT_MAGIC;
-#endif
-}
-#else
 - (void)viewWillTransitionToSize:(CGSize)size
        withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {
@@ -412,34 +326,9 @@ void SPLAudioCallback(Float32 *buffer, UInt32 frameSize, void * userData)
     
     // VFD の dB とラベルの重なりをなくす。
     self.splView.dbLabel.hidden = (([[UserDefaults sharedManager] isIPhone4] || [[UserDefaults sharedManager] isIPhone5]) && [[UserDefaults sharedManager] isPortrait]);
-    // バナービューの表示制御
-#if AUTO_LAYOUT
     _contentConstraint.constant = CONSTRAINT_MAGIC;
-#endif
 }
-#endif
 
-#if 0
-- (void) didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    
-    // maintainPinch を実行する。
-    [self.splView setNeedsLayout];
-
-    // VFD の dB とラベルの重なりをなくす。
-    self.splView.dbLabel.hidden = (([[UserDefaults sharedManager] isIPhone4] || [[UserDefaults sharedManager] isIPhone5]) && [[UserDefaults sharedManager] isPortrait]);
-
-#if (AUTO_LAYOUT && ADMOB)
-    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
-        _contentConstraint.constant = CONSTRAINT_MAGIC + [self getAdmobAdHeight];
-    }
-#endif
-
-#if (ADMOB == ON)
-    // AdMob のセットアップ
-    [self setupAdmobFor_iPad:adMobUnitID3];
-#endif
-}
-#else
 - (void) traitCollectionDidChange: (UITraitCollection *) previousTraitCollection {
     [super traitCollectionDidChange: previousTraitCollection];
 
@@ -448,19 +337,7 @@ void SPLAudioCallback(Float32 *buffer, UInt32 frameSize, void * userData)
     
     // VFD の dB とラベルの重なりをなくす。
     self.splView.dbLabel.hidden = (([[UserDefaults sharedManager] isIPhone4] || [[UserDefaults sharedManager] isIPhone5]) && [[UserDefaults sharedManager] isPortrait]);
-    
-#if (AUTO_LAYOUT && ADMOB)
-    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
-        _contentConstraint.constant = CONSTRAINT_MAGIC + [self getAdmobAdHeight];
-    }
-#endif
-    
-#if (ADMOB == ON)
-    // AdMob のセットアップ
-    [self setupAdmobFor_iPad:adMobUnitID3];
-#endif
 }
-#endif
 
 - (void)didReceiveMemoryWarning {
     DEBUG_LOG(@"%s", __func__);
@@ -488,7 +365,7 @@ void SPLAudioCallback(Float32 *buffer, UInt32 frameSize, void * userData)
 //    if (result)
     {// MoAudio::init は MainViewController で一回だけやる。
         MoAudio::stop();
-        result = MoAudio::start(SPLAudioCallback);
+        result = MoAudio::start( SPLAudioCallback );
         if (result) {
             // マイクの AGC をオフにする。 <AudioToolbox/AudioToolbox.h>
 #if MEASUREMENT

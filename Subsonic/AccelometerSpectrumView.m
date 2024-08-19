@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2024  Takuji Matsugaki
+    Copyright (C) 2017-2022  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  */
 //
 //  AccelometerSpectrumView.m
-//
 
 #import <Accelerate/Accelerate.h>
 #import "ColorUtil.h"
@@ -187,13 +186,7 @@
     color = [ColorUtil vfdOn];
     CGContextSetStrokeColorWithColor(context, [ColorUtil vfdOn].CGColor);
     CGContextSetFillColorWithColor(context, [ColorUtil vfdOn].CGColor);
-#if DB_POWER
     static NSInteger dbLabel[] = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
-#elif DB_VOLT // Active(0〜10)
-    static NSInteger dbLabel[] = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
-#else
-    static NSInteger dbLabel[] = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
-#endif
     for (NSUInteger i = 0; i < volumeDecades + 1; i++) {
         NSString *title = [NSString stringWithFormat:@"%ld", (long)dbLabel[i]];
         Float32 hOffset = 10.5 * [title length] / 2.0; // 15
@@ -263,7 +256,7 @@
     CGContextSetFillColorWithColor(context, [ColorUtil vfdOn].CGColor);
     // リニア縦罫線
     CGContextBeginPath(context);
-    // 64Hz の按分が基本なので、インデックスの最大値は、FFT_HALF_SAMPLE_RATE。
+    // 64Hz の按分が基本
     Float32 ruler_dh = width / ACCELO_SPECTRUM_HALF_SAMPLE_RATE;
     for (NSUInteger i = 0; i <= ACCELO_SPECTRUM_HALF_SAMPLE_RATE; i++) {
         Float32 hpos = ruler_dh * i + org_x;
@@ -349,12 +342,6 @@
             Float32 hpos;
             Float32 volumeOffset;
             Float32 rawAccel = [self peekData:i xyz:xyz];
-#if DB_POWER
-            Float32 dbTenth = AUDIBLE_DIVISER_LOG_F + log10(rawAccel);        // 対数の値は dB(10log()) の 1/10
-            Float32 ratio = ((FULL_DYNAMIC_RANGE_DECADE + fmaxf(-FULL_DYNAMIC_RANGE_DECADE, dbTenth)) / FULL_DYNAMIC_RANGE_DECADE);
-            
-            volumeOffset = height * ratio;    // -160dB〜0dB (160dB log10(100000000)=8)
-#elif DB_VOLT // Active(vDSP_vdbcon)
             // そもそも対数ではない。
             Float32 one = 1.0f;
             Float32 decibel;
@@ -362,7 +349,7 @@
             vDSP_vdbcon(&rawAccel, 1, &one, &decibel, 1, 1, 0); // Power
             Float64 ratio = rawAccel;
             volumeOffset = height * ratio;    // -160dB〜0dB (160dB log10(100000000)=8)
-#endif
+
             fract = (1.0 * i / ((Float32) Accelo_Spectrum_BUFFER_SIZE));
             if (i == 0) {
                 hpos = org_x + 1.0;
@@ -745,62 +732,6 @@
                         rect:(CGRect)rect
 {
     return;
-    // このグラフにスクロールインジケーターは似合わない。
-    if (scrollBarVisibility) {
-#if 1
-        CGRect frame = CGGraphRectMake(rect);
-        CGFloat org_x = frame.origin.x;
-        CGFloat org_y = frame.origin.y;
-        CGFloat width = frame.size.width;
-        CGFloat height = frame.size.height;
-        
-        if (_pinchScaleX > 0 && _panOffset.x <= 0) {
-            CGFloat hpos = org_x + 5.0;
-            CGFloat vpos = org_y + height - 5.0;
-            
-            CGContextSetLineWidth(context, kScrollBarLineWidth);
-            CGContextSetStrokeColorWithColor(context, [ColorUtil vfdOn].CGColor);
-            
-            CGContextBeginPath(context);
-            CGContextMoveToPoint(context, hpos - _panOffset.x / _pinchScaleX, vpos);
-            CGContextAddLineToPoint(context, hpos - _panOffset.x / _pinchScaleX + width / _pinchScaleX - 15.0, vpos);
-            CGContextStrokePath(context);
-        }
-        if (_pinchScaleY > 0 && _panOffset.y <= 0) {
-            CGFloat hpos = org_x + width - 5.0;
-            CGFloat vpos = org_y + 5.0;
-            
-            CGContextSetLineWidth(context, kScrollBarLineWidth);
-            CGContextSetStrokeColorWithColor(context, [ColorUtil vfdOn].CGColor);
-            
-            CGContextBeginPath(context);
-            CGContextMoveToPoint(context, hpos, vpos - _panOffset.y / _pinchScaleY);
-            CGContextAddLineToPoint(context, hpos, vpos - _panOffset.y / _pinchScaleY + height / _pinchScaleY - 15.0);
-            CGContextStrokePath(context);
-        }
-#else
-        if (_pinchScaleX > 0 && _panOffset.x <= 0) {
-            CGFloat hpos = self.frame.origin.x;
-            CGFloat width = self.frame.size.width;
-            CGFloat leadingRatio = (hpos - _panOffset.x / _pinchScaleX) / width;
-            CGFloat contentRatio = (hpos - _panOffset.x / _pinchScaleX + width / _pinchScaleX) / width;
-            
-            _hScrollBar.leadingRatio = leadingRatio;
-            _hScrollBar.contentRatio = contentRatio;
-            [_hScrollBar setNeedsDisplay];
-        }
-        if (_pinchScaleY > 0 && _panOffset.y <= 0) {
-            CGFloat vpos = self.frame.origin.y;
-            CGFloat height = self.frame.size.height;
-            CGFloat leadingRatio = (vpos - _panOffset.y / _pinchScaleY) / height;
-            CGFloat contentRatio = (vpos - _panOffset.y / _pinchScaleY + height / _pinchScaleY) / height;
-            
-            _vScrollBar.leadingRatio = leadingRatio;
-            _vScrollBar.contentRatio = contentRatio;
-            [_vScrollBar setNeedsDisplay];
-        }
-#endif
-    }
 }
 
 - (void) hideScrollIndicator {

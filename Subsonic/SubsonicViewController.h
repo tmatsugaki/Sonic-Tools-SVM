@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2024  Takuji Matsugaki
+    Copyright (C) 2017-2022  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,27 +17,14 @@
  */
 //
 //  SubsonicViewController.h
-//
 
 #import <UIKit/UIKit.h>
 #import "definitions.h"
-#if (ADMOB == ON)
-#import <GoogleMobileAds/GADBannerView.h>
-#endif
 #import "UserDefaults.h"
 
 @interface SubsonicViewController : UIViewController {
 }
 //@property (assign, nonatomic) BOOL freeze;
 @property (assign, nonatomic) BOOL toPortrait;
-#if (ADMOB == ON)
-@property (strong, nonatomic) GADBannerView *banner;
-#endif
 @property (strong, nonatomic) IBOutlet UIView *bannerView;
-
-#if (ADMOB == ON)
-- (CGFloat) getAdmobAdHeight;
-- (void) setupAdmob:(NSString *)adUnitID;
-- (void) setupAdmobFor_iPad:(NSString *)adUnitID;
-#endif
 @end

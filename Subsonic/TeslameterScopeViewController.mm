@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2024  Takuji Matsugaki
+    Copyright (C) 2017-2022  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,12 +17,9 @@
  */
 //
 //  TeslameterScopeViewController.m
-//
 
 #import "TeslameterScopeViewController.h"
 #import "Environment.h"
-
-//#undef SMART_REFRESH
 
 static unsigned long long teslameterScopeBufferFillIndex = 0;
 
@@ -113,7 +110,7 @@ BOOL *teslameter_scope_freeze_p = nil;
 - (void) viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     
-#if (SMART_REFRESH || LOAD_DUMMY_DATA)
+#if LOAD_DUMMY_DATA
     self.refreshTimer = [NSTimer scheduledTimerWithTimeInterval:REFRESH_INTERVAL target:self selector:@selector(postUpdate) userInfo:nil repeats:YES];
 #endif
     self.teslameterScopeView.delegate = self;
@@ -128,31 +125,10 @@ BOOL *teslameter_scope_freeze_p = nil;
 
     // start the compass
     [self.locationManager startUpdatingHeading];
-
-#if AUTO_LAYOUT
-#if (ADMOB == ON)
-    // AdMob のセットアップ準備
-    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
-        _contentConstraint.constant = CONSTRAINT_MAGIC + [self getAdmobAdHeight];
-        DEBUG_LOG(@"%g", _contentConstraint.constant);
-    } else {
-        _contentConstraint.constant = CONSTRAINT_MAGIC;
-    }
-#endif
-#endif
 }
 
 - (void) viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
-
-#if (ADMOB == ON)
-    // AdMob のセットアップ
-    [self setupAdmob:adMobUnitID7];
-    if (self.banner.adSize.size.width != self.view.frame.size.width) {
-        [self setupAdmobFor_iPad:adMobUnitID7];
-    }
-    DEBUG_LOG(@"%s CANT_ADMOB:%d", __func__, CANT_ADMOB([Environment isPortrait]));
-#endif
 }
 
 - (void) viewWillDisappear:(BOOL)animated {
@@ -175,11 +151,7 @@ BOOL *teslameter_scope_freeze_p = nil;
 
     // maintainPinch を実行する。
     [self.teslameterScopeView setNeedsLayout];
-    // バナービューの表示制御
-#if AUTO_LAYOUT
     _contentConstraint.constant = CONSTRAINT_MAGIC;
-#endif
-    DEBUG_LOG(@"%s CANT_ADMOB:%d", __func__, CANT_ADMOB(self.toPortrait));
 }
 #else
 - (void)viewWillTransitionToSize:(CGSize)size
@@ -189,11 +161,7 @@ BOOL *teslameter_scope_freeze_p = nil;
 
     // maintainPinch を実行する。
     [self.teslameterScopeView setNeedsLayout];
-    // バナービューの表示制御
-#if AUTO_LAYOUT
     _contentConstraint.constant = CONSTRAINT_MAGIC;
-#endif
-    DEBUG_LOG(@"%s CANT_ADMOB:%d", __func__, CANT_ADMOB(self.toPortrait));
 }
 #endif
 
@@ -201,18 +169,6 @@ BOOL *teslameter_scope_freeze_p = nil;
 - (void) didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
     // maintainPinch を実行する。
     [self.teslameterScopeView setNeedsLayout];
-
-#if (AUTO_LAYOUT && ADMOB)
-    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
-        _contentConstraint.constant = CONSTRAINT_MAGIC + [self getAdmobAdHeight];
-    }
-#endif
-
-#if (ADMOB == ON)
-    // AdMob のセットアップ
-    [self setupAdmobFor_iPad:adMobUnitID7];
-    DEBUG_LOG(@"%s CANT_ADMOB:%d", __func__, CANT_ADMOB([Environment isPortrait]));
-#endif
 }
 #else
 - (void) traitCollectionDidChange: (UITraitCollection *) previousTraitCollection {
@@ -220,18 +176,6 @@ BOOL *teslameter_scope_freeze_p = nil;
 
     // maintainPinch を実行する。
     [self.teslameterScopeView setNeedsLayout];
-    
-#if (AUTO_LAYOUT && ADMOB)
-    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
-        _contentConstraint.constant = CONSTRAINT_MAGIC + [self getAdmobAdHeight];
-    }
-#endif
-    
-#if (ADMOB == ON)
-    // AdMob のセットアップ
-    [self setupAdmobFor_iPad:adMobUnitID7];
-    DEBUG_LOG(@"%s CANT_ADMOB:%d", __func__, CANT_ADMOB([Environment isPortrait]));
-#endif
 }
 #endif
 
@@ -270,64 +214,6 @@ BOOL *teslameter_scope_freeze_p = nil;
     // Update the graph with the new magnetic reading.
     [self.graphView updateHistoryWithX:heading.x y:heading.y z:heading.z];
 #else
-#if SMART_REFRESH
-    Float32 x = ABS(heading.x);
-    Float32 y = ABS(heading.y);
-    Float32 z = ABS(heading.z);
-
-    if (*teslameter_scope_freeze_p == NO) {
-        flushTeslaScopeCount++;
-        
-        Float64 sumX = avgTeslaScopeRedValue * (flushTeslaScopeCount-1) + x;
-        Float64 sumY = avgTeslaScopeGreenValue * (flushTeslaScopeCount-1) + y;
-        Float64 sumZ = avgTeslaScopeBlueValue * (flushTeslaScopeCount-1) + z;
-        
-        //    DEBUG_LOG(@"%g,%g,%g", x, y, z);
-        //
-        if (maxTeslaScopeRedValue < x) {
-            maxTeslaScopeRedValue = x;
-        }
-        if (x && minTeslaScopeRedValue > x) {
-            minTeslaScopeRedValue = x;
-        }
-        avgTeslaScopeRedValue = sumX / ((Float64) flushTeslaScopeCount);
-        //
-        if (maxTeslaScopeGreenValue < y) {
-            maxTeslaScopeGreenValue = y;
-        }
-        if (y && minTeslaScopeGreenValue > y) {
-            minTeslaScopeGreenValue = y;
-        }
-        avgTeslaScopeGreenValue = sumY / ((Float64) flushTeslaScopeCount);
-        //
-        if (maxTeslaScopeBlueValue < z) {
-            maxTeslaScopeBlueValue = z;
-        }
-        if (z && minTeslaScopeBlueValue > z) {
-            minTeslaScopeBlueValue = z;
-        }
-        avgTeslaScopeBlueValue = sumZ / ((Float64) flushTeslaScopeCount);
-    }
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-        // リングバッファにデータを1つ追加する。
-        [teslameter_scope_view enqueueData:x xyz:0];
-        // リングバッファにデータを1つ追加する。
-        [teslameter_scope_view enqueueData:y xyz:1];
-        // リングバッファにデータを1つ追加する。
-        [teslameter_scope_view enqueueData:z xyz:2];
-        
-        teslameter_scope_view.maxRed = maxTeslaScopeRedValue;
-        teslameter_scope_view.avgRed = avgTeslaScopeRedValue;
-        teslameter_scope_view.minRed = minTeslaScopeRedValue;
-        teslameter_scope_view.maxGreen = maxTeslaScopeGreenValue;
-        teslameter_scope_view.avgGreen = avgTeslaScopeGreenValue;
-        teslameter_scope_view.minGreen = minTeslaScopeGreenValue;
-        teslameter_scope_view.maxBlue = maxTeslaScopeBlueValue;
-        teslameter_scope_view.avgBlue = avgTeslaScopeBlueValue;
-        teslameter_scope_view.minBlue = minTeslaScopeBlueValue;
-    });
-    teslameterScopeBufferFillIndex++;
-#else
     if (*teslameter_scope_freeze_p == NO) {
         flushTeslaScopeCount++;
         
@@ -337,36 +223,7 @@ BOOL *teslameter_scope_freeze_p = nil;
         Float64 sumX = avgTeslaScopeRedValue * (flushTeslaScopeCount-1) + x;
         Float64 sumY = avgTeslaScopeGreenValue * (flushTeslaScopeCount-1) + y;
         Float64 sumZ = avgTeslaScopeBlueValue * (flushTeslaScopeCount-1) + z;
-#if (SAVE_DUMMY_DATA && !TARGET_IPHONE_SIMULATOR)
-        [[NSFileManager defaultManager] removeItemAtPath:TESLA_SCOPE_FILE_PATH error:nil];
-        if ([[NSFileManager defaultManager] fileExistsAtPath:TESLA_SCOPE_FILE_PATH] == NO) {
-            NSMutableArray *arr = [[NSMutableArray alloc] init];
-            
-            [arr addObject:[NSNumber numberWithFloat:x]];
-            [arr addObject:[NSNumber numberWithFloat:y]];
-            [arr addObject:[NSNumber numberWithFloat:z]];
-            [arr addObject:[NSNumber numberWithDouble:sumX]];
-            [arr addObject:[NSNumber numberWithDouble:sumY]];
-            [arr addObject:[NSNumber numberWithDouble:sumZ]];
-            [arr writeToFile:TESLA_SCOPE_FILE_PATH atomically:YES];
-        }
-        //#elif (TARGET_IPHONE_SIMULATOR)
-#elif (LOAD_DUMMY_DATA && TARGET_IPHONE_SIMULATOR)
-// このパスも通過する。
-        if ([[NSFileManager defaultManager] fileExistsAtPath:TESLA_SCOPE_FILE_PATH]) {
-            NSArray *arr = [NSArray arrayWithContentsOfFile:TESLA_SCOPE_FILE_PATH];
-            NSUInteger i = 0;
-            
-            x = ((NSNumber *) arr[i++]).floatValue;
-            y = ((NSNumber *) arr[i++]).floatValue;
-            z = ((NSNumber *) arr[i++]).floatValue;
-            sumX = ((NSNumber *) arr[i++]).doubleValue;
-            sumY = ((NSNumber *) arr[i++]).doubleValue;
-            sumZ = ((NSNumber *) arr[i++]).doubleValue;
-        }
-#endif
-        //    DEBUG_LOG(@"%g,%g,%g", x, y, z);
-        //
+
         if (maxTeslaScopeRedValue < x) {
             maxTeslaScopeRedValue = x;
         }
@@ -428,7 +285,6 @@ BOOL *teslameter_scope_freeze_p = nil;
         DEBUG_LOG(@"%s レイテンシーが小さすぎ！", __func__);
     }
     teslameterScopeBufferFillIndex++;
-#endif
 #endif
 }
 

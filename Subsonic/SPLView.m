@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2024  Takuji Matsugaki
+    Copyright (C) 2017-2022  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  */
 //
 //  SPLView.m
-//
 
 #import <Accelerate/Accelerate.h>
 #import "Environment.h"
@@ -202,14 +201,7 @@
     color = [ColorUtil vfdOn];
     CGContextSetStrokeColorWithColor(context, [ColorUtil vfdOn].CGColor);
     CGContextSetFillColorWithColor(context, [ColorUtil vfdOn].CGColor);
-#if DB_POWER
-    static NSInteger dbLabel[] = {120, 110, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0, -10, -20, -30, -40};
-#elif DB_VOLT // Active(0dB〜160dB)
-//    static NSInteger dbLabel[] = {160, 140, 120, 100, 80, 60, 40, 20, 0};
     static NSInteger dbLabel[] = {120, 100, 80, 60, 40, 20, 0};
-#else
-    static NSInteger dbLabel[] = {120, 110, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0, -10, -20, -30, -40};
-#endif
     for (NSUInteger i = 0; i < SPL_DYNAMIC_RANGE_DECADE + 1; i++) {
         NSString *title = [NSString stringWithFormat:@"%ld", (long)dbLabel[i]];
         Float32 hOffset = 10.5 * [title length] / 2.0; // 15
@@ -273,19 +265,7 @@
     CGContextSetStrokeColorWithColor(context, [ColorUtil vfdOn].CGColor);
     CGContextSetFillColorWithColor(context, [ColorUtil vfdOn].CGColor);
     {// リニア縦罫線
-        // 22050Hz の按分が基本なので、インデックスの最大値は、FFT_HALF_SAMPLE_RATE。
-        // 1目盛310μs にする。更新される周期は 5.8ms=5800μs
-    //    Float32 unit = 4096.0 / 176400.0;   // 0.002321秒(2321μs)
-
-        // SPL_BUFFER_SIZE:512 -> SPL_BUFFER_SIZE:2048
-//        Float32 unit = 4096.0 / 176400.0;     // 1フレーム は 0.02321秒(2321μs)
-        NSUInteger times;
-        
-//        if ([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) {
-//            times = 43;                  // 1目盛100μsにする。
-//        } else {
-            times = 66;                  // 1目盛100μsにする。
-//        }
+        NSUInteger times = 66;
         NSUInteger multiplier = SPL_BUFFER_SIZE / 512;
         times *= multiplier;
 
@@ -363,15 +343,6 @@
         if (rawSPL == 0.0) {// rawSPL が 0 だと log10(rawSPL) が +INF になって障害が発生する。
             rawSPL = SILENT;
         }
-#if DB_POWER
-        // ??? ダメダメ
-        Float32 one = 1.0f;
-        Float32 decibel;
-        vDSP_vdbcon(&rawSPL, 1, &one, &decibel, 1, 1, 0); // Power
-        decibel += 100.0;
-        Float64 ratio = decibel / SPL_DYNAMIC_RANGE_DECIBEL;
-        volumeOffset = height * ratio;    // -160dB〜0dB (160dB log10(100000000)=8)
-#elif DB_VOLT // Active(vDSP_vdbcon)
         Float32 decibel = [self rmsToDecibel:rawSPL];
         // ゲインは 0.0〜0.25 を 0.0dB〜40.0dB にマップする。
         Float64 ratio = decibel / SPL_DYNAMIC_RANGE_DECIBEL;
@@ -379,7 +350,6 @@
         if (decibel > -20.0) {
             self.decibel = decibel;
         }
-#endif
         fract = (1.0 * i / SPL_BUFFER_SIZE);
         if (i == 0) {
             hpos = org_x + 1.0;
@@ -440,23 +410,10 @@
     db = fmod(10.0 * db, 10.0);
     _f0.status = DCELL_LEVEL_ON;  // 常時ON
     _f0.tag = (int) floor(db);
-
-#if DB_POWER
-    // Vector convert power or amplitude to decibels; single precision.
-    vDSP_vdbcon(&_minValue, 1, &one, &decibel, 1, 1, 0); // Power
-    _min.text = [NSString stringWithFormat:@"%.1f", decibel];
-    // Vector convert power or amplitude to decibels; single precision.
-    vDSP_vdbcon(&_maxValue, 1, &one, &decibel, 1, 1, 0); // Power
-    _max.text = [NSString stringWithFormat:@"%.1f", decibel];
-    // Vector convert power or amplitude to decibels; single precision.
-    vDSP_vdbcon(&_avgValue, 1, &one, &decibel, 1, 1, 0); // Power
-    _rms.text = [NSString stringWithFormat:@"%.1f", decibel];
-#elif DB_VOLT // Active(vDSP_vdbcon)
     // Vector convert power or amplitude to decibels; single precision.
     _min.text = [NSString stringWithFormat:@"%.1f", [self rmsToDecibel:_minValue]];
     _max.text = [NSString stringWithFormat:@"%.1f", [self rmsToDecibel:_maxValue]];
     _rms.text = [NSString stringWithFormat:@"%.1f", [self rmsToDecibel:_avgValue]];
-#endif
 
     // コンテントの描画
     CGContextRef context = UIGraphicsGetCurrentContext();
@@ -777,62 +734,6 @@
                         rect:(CGRect)rect
 {
     return;
-    // このグラフにスクロールインジケーターは似合わない。
-    if (scrollBarVisibility) {
-#if 1
-        CGRect frame = CGGraphRectMake(rect);
-        CGFloat org_x = frame.origin.x;
-        CGFloat org_y = frame.origin.y;
-        CGFloat width = frame.size.width;
-        CGFloat height = frame.size.height;
-        
-        if (_pinchScaleX > 0 && _panOffset.x <= 0) {
-            CGFloat hpos = org_x + 5.0;
-            CGFloat vpos = org_y + height - 5.0;
-            
-            CGContextSetLineWidth(context, kScrollBarLineWidth);
-            CGContextSetStrokeColorWithColor(context, [ColorUtil vfdOn].CGColor);
-            
-            CGContextBeginPath(context);
-            CGContextMoveToPoint(context, hpos - _panOffset.x / _pinchScaleX, vpos);
-            CGContextAddLineToPoint(context, hpos - _panOffset.x / _pinchScaleX + width / _pinchScaleX - 15.0, vpos);
-            CGContextStrokePath(context);
-        }
-        if (_pinchScaleY > 0 && _panOffset.y <= 0) {
-            CGFloat hpos = org_x + width - 5.0;
-            CGFloat vpos = org_y + 5.0;
-            
-            CGContextSetLineWidth(context, kScrollBarLineWidth);
-            CGContextSetStrokeColorWithColor(context, [ColorUtil vfdOn].CGColor);
-            
-            CGContextBeginPath(context);
-            CGContextMoveToPoint(context, hpos, vpos - _panOffset.y / _pinchScaleY);
-            CGContextAddLineToPoint(context, hpos, vpos - _panOffset.y / _pinchScaleY + height / _pinchScaleY - 15.0);
-            CGContextStrokePath(context);
-        }
-#else
-        if (_pinchScaleX > 0 && _panOffset.x <= 0) {
-            CGFloat hpos = self.frame.origin.x;
-            CGFloat width = self.frame.size.width;
-            CGFloat leadingRatio = (hpos - _panOffset.x / _pinchScaleX) / width;
-            CGFloat contentRatio = (hpos - _panOffset.x / _pinchScaleX + width / _pinchScaleX) / width;
-            
-            _hScrollBar.leadingRatio = leadingRatio;
-            _hScrollBar.contentRatio = contentRatio;
-            [_hScrollBar setNeedsDisplay];
-        }
-        if (_pinchScaleY > 0 && _panOffset.y <= 0) {
-            CGFloat vpos = self.frame.origin.y;
-            CGFloat height = self.frame.size.height;
-            CGFloat leadingRatio = (vpos - _panOffset.y / _pinchScaleY) / height;
-            CGFloat contentRatio = (vpos - _panOffset.y / _pinchScaleY + height / _pinchScaleY) / height;
-            
-            _vScrollBar.leadingRatio = leadingRatio;
-            _vScrollBar.contentRatio = contentRatio;
-            [_vScrollBar setNeedsDisplay];
-        }
-#endif
-    }
 }
 
 - (void) hideScrollIndicator {

@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2024  Takuji Matsugaki
+    Copyright (C) 2017-2022  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  */
 //
 //  TeslameterSPLViewController.m
-//
 
 #import "TeslameterSPLViewController.h"
 #import "Environment.h"
@@ -25,8 +24,6 @@
 static unsigned long long teslameterSPLBufferFillIndex = 0;
 
 #import "FFTHelper.hh"
-
-//#undef SMART_REFRESH
 
 #pragma mark - Teslameter
 
@@ -141,7 +138,7 @@ BOOL *teslameter_spl_freeze_p = nil;
     _teslameterSPLView.playPauseSwitch.hidden = NO;
 #endif
 
-#if (SMART_REFRESH || LOAD_DUMMY_DATA)
+#if LOAD_DUMMY_DATA
     self.refreshTimer = [NSTimer scheduledTimerWithTimeInterval:REFRESH_INTERVAL target:self selector:@selector(postUpdate) userInfo:nil repeats:YES];
 #endif
     if (self.navigationController) {
@@ -161,16 +158,6 @@ BOOL *teslameter_spl_freeze_p = nil;
 
     // VFD の μT とラベルの重なりをなくす。
     self.teslameterSPLView.lblUT.hidden = (([[UserDefaults sharedManager] isIPhone4] || [[UserDefaults sharedManager] isIPhone5]) && [[UserDefaults sharedManager] isPortrait]);
-
-#if (AUTO_LAYOUT && ADMOB)
-    // AdMob のセットアップ準備
-    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
-        _contentConstraint.constant = CONSTRAINT_MAGIC + [self getAdmobAdHeight];
-        DEBUG_LOG(@"%g", _contentConstraint.constant);
-    } else {
-        _contentConstraint.constant = CONSTRAINT_MAGIC;
-    }
-#endif
 }
 
 - (void) viewDidAppear:(BOOL)animated {
@@ -178,15 +165,6 @@ BOOL *teslameter_spl_freeze_p = nil;
     
     _freeze = NO;
     [self setLedMeasuring:_freeze == NO];
-
-#if (ADMOB == ON)
-    // AdMob のセットアップ
-    [self setupAdmob:adMobUnitID8];
-    if (self.banner.adSize.size.width != self.view.frame.size.width) {
-        [self setupAdmobFor_iPad:adMobUnitID8];
-    }
-    DEBUG_LOG(@"%s CANT_ADMOB:%d", __func__, CANT_ADMOB([Environment isPortrait]));
-#endif
 }
 
 - (void) viewWillDisappear:(BOOL)animated {
@@ -213,11 +191,7 @@ BOOL *teslameter_spl_freeze_p = nil;
     
     // maintainPinch を実行する。
     [self.teslameterSPLView setNeedsLayout];
-    // バナービューの表示制御
-#if AUTO_LAYOUT
     _contentConstraint.constant = CONSTRAINT_MAGIC;
-#endif
-    DEBUG_LOG(@"%s CANT_ADMOB:%d", __func__, CANT_ADMOB(self.toPortrait));
 
     // VFD の μT とラベルの重なりをなくす。
     self.teslameterSPLView.lblUT.hidden = (([[UserDefaults sharedManager] isIPhone4] || [[UserDefaults sharedManager] isIPhone5]) && [[UserDefaults sharedManager] isPortrait]);
@@ -230,11 +204,7 @@ BOOL *teslameter_spl_freeze_p = nil;
 
     // maintainPinch を実行する。
     [self.teslameterSPLView setNeedsLayout];
-    // バナービューの表示制御
-#if AUTO_LAYOUT
     _contentConstraint.constant = CONSTRAINT_MAGIC;
-#endif
-    DEBUG_LOG(@"%s CANT_ADMOB:%d", __func__, CANT_ADMOB(self.toPortrait));
     
     // VFD の μT とラベルの重なりをなくす。
     self.teslameterSPLView.lblUT.hidden = (([[UserDefaults sharedManager] isIPhone4] || [[UserDefaults sharedManager] isIPhone5]) && [[UserDefaults sharedManager] isPortrait]);
@@ -246,18 +216,6 @@ BOOL *teslameter_spl_freeze_p = nil;
     
     // maintainPinch を実行する。
     [self.teslameterSPLView setNeedsLayout];
-
-#if (AUTO_LAYOUT && ADMOB)
-    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
-        _contentConstraint.constant = CONSTRAINT_MAGIC + [self getAdmobAdHeight];
-    }
-#endif
-
-#if (ADMOB == ON)
-    // AdMob のセットアップ
-    [self setupAdmobFor_iPad:adMobUnitID8];
-    DEBUG_LOG(@"%s CANT_ADMOB:%d", __func__, CANT_ADMOB([Environment isPortrait]));
-#endif
     // VFD の μT とラベルの重なりをなくす。
     self.teslameterSPLView.lblUT.hidden = (([[UserDefaults sharedManager] isIPhone4] || [[UserDefaults sharedManager] isIPhone5]) && [[UserDefaults sharedManager] isPortrait]);
 }
@@ -267,18 +225,6 @@ BOOL *teslameter_spl_freeze_p = nil;
 
     // maintainPinch を実行する。
     [self.teslameterSPLView setNeedsLayout];
-    
-#if (AUTO_LAYOUT && ADMOB)
-    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
-        _contentConstraint.constant = CONSTRAINT_MAGIC + [self getAdmobAdHeight];
-    }
-#endif
-    
-#if (ADMOB == ON)
-    // AdMob のセットアップ
-    [self setupAdmobFor_iPad:adMobUnitID8];
-    DEBUG_LOG(@"%s CANT_ADMOB:%d", __func__, CANT_ADMOB([Environment isPortrait]));
-#endif
     // VFD の μT とラベルの重なりをなくす。
     self.teslameterSPLView.lblUT.hidden = (([[UserDefaults sharedManager] isIPhone4] || [[UserDefaults sharedManager] isIPhone5]) && [[UserDefaults sharedManager] isPortrait]);
 }
@@ -319,64 +265,6 @@ BOOL *teslameter_spl_freeze_p = nil;
     // Update the graph with the new magnetic reading.
     [self.graphView updateHistoryWithX:heading.x y:heading.y z:heading.z];
 #else
-#if SMART_REFRESH
-    Float32 x = ABS(heading.x);
-    Float32 y = ABS(heading.y);
-    Float32 z = ABS(heading.z);
-
-    if (*teslameter_spl_freeze_p == NO) {
-        flushTeslaSPLCount++;
-        
-        Float64 sumX = avgTeslaSPLRedValue * (flushTeslaSPLCount-1) + x;
-        Float64 sumY = avgTeslaSPLGreenValue * (flushTeslaSPLCount-1) + y;
-        Float64 sumZ = avgTeslaSPLBlueValue * (flushTeslaSPLCount-1) + z;
-        
-        //
-        if (maxTeslaSPLRedValue < x) {
-            maxTeslaSPLRedValue = x;
-        }
-        if (x && minTeslaSPLRedValue > x) {
-            minTeslaSPLRedValue = x;
-        }
-        avgTeslaSPLRedValue = sumX / ((Float64) flushTeslaSPLCount);
-        //
-        if (maxTeslaSPLGreenValue < y) {
-            maxTeslaSPLGreenValue = y;
-        }
-        if (y && minTeslaSPLGreenValue > y) {
-            minTeslaSPLGreenValue = y;
-        }
-        avgTeslaSPLGreenValue = sumY / ((Float64) flushTeslaSPLCount);
-        //
-        if (maxTeslaSPLBlueValue < z) {
-            maxTeslaSPLBlueValue = z;
-        }
-        if (z && minTeslaSPLBlueValue > z) {
-            minTeslaSPLBlueValue = z;
-        }
-        avgTeslaSPLBlueValue = sumZ / ((Float64) flushTeslaSPLCount);
-    }
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-        Float32 rmsValue = sqrt((x * x + y * y + z * z) / 1.0);
-        
-        //        DEBUG_LOG(@"X:%g, Y:%g, Z:%g [%g]", x, y, z, rmsValue);
-        
-        // リングバッファにデータを1つ追加する。
-        [teslameter_spl_view enqueueData:rmsValue];
-        
-        teslameter_spl_view.rmsValue = rmsValue;
-        teslameter_spl_view.maxRMS = sqrt((maxTeslaSPLRedValue   * maxTeslaSPLRedValue +
-                                          maxTeslaSPLGreenValue * maxTeslaSPLGreenValue +
-                                          maxTeslaSPLBlueValue  * maxTeslaSPLBlueValue) / 1.0);
-        teslameter_spl_view.avgRMS = sqrt((avgTeslaSPLRedValue   * avgTeslaSPLRedValue +
-                                          avgTeslaSPLGreenValue * avgTeslaSPLGreenValue +
-                                          avgTeslaSPLBlueValue  * avgTeslaSPLBlueValue) / 1.0);
-        teslameter_spl_view.minRMS = sqrt((minTeslaSPLRedValue   * minTeslaSPLRedValue +
-                                          minTeslaSPLGreenValue * minTeslaSPLGreenValue +
-                                          minTeslaSPLBlueValue  * minTeslaSPLBlueValue) / 1.0);
-    });
-    teslameterSPLBufferFillIndex++;
-#else
     if (*teslameter_spl_freeze_p == NO) {
         flushTeslaSPLCount++;
         
@@ -386,35 +274,7 @@ BOOL *teslameter_spl_freeze_p = nil;
         Float64 sumX = avgTeslaSPLRedValue * (flushTeslaSPLCount-1) + x;
         Float64 sumY = avgTeslaSPLGreenValue * (flushTeslaSPLCount-1) + y;
         Float64 sumZ = avgTeslaSPLBlueValue * (flushTeslaSPLCount-1) + z;
-#if (SAVE_DUMMY_DATA && !TARGET_IPHONE_SIMULATOR)
-        [[NSFileManager defaultManager] removeItemAtPath:TESLA_RMS_FILE_PATH error:nil];
-        if ([[NSFileManager defaultManager] fileExistsAtPath:TESLA_RMS_FILE_PATH] == NO) {
-            NSMutableArray *arr = [[NSMutableArray alloc] init];
-            
-            [arr addObject:[NSNumber numberWithFloat:x]];
-            [arr addObject:[NSNumber numberWithFloat:y]];
-            [arr addObject:[NSNumber numberWithFloat:z]];
-            [arr addObject:[NSNumber numberWithDouble:sumX]];
-            [arr addObject:[NSNumber numberWithDouble:sumY]];
-            [arr addObject:[NSNumber numberWithDouble:sumZ]];
-            [arr writeToFile:TESLA_RMS_FILE_PATH atomically:YES];
-        }
-        //#elif (TARGET_IPHONE_SIMULATOR)
-#elif (LOAD_DUMMY_DATA && TARGET_IPHONE_SIMULATOR)
-// このパスも通過する。
-        if ([[NSFileManager defaultManager] fileExistsAtPath:TESLA_RMS_FILE_PATH]) {
-            NSArray *arr = [NSArray arrayWithContentsOfFile:TESLA_RMS_FILE_PATH];
-            NSUInteger i = 0;
-            
-            x = ((NSNumber *) arr[i++]).floatValue;
-            y = ((NSNumber *) arr[i++]).floatValue;
-            z = ((NSNumber *) arr[i++]).floatValue;
-            sumX = ((NSNumber *) arr[i++]).doubleValue;
-            sumY = ((NSNumber *) arr[i++]).doubleValue;
-            sumZ = ((NSNumber *) arr[i++]).doubleValue;
-        }
-#endif
-        //
+
         if (maxTeslaSPLRedValue < x) {
             maxTeslaSPLRedValue = x;
         }
@@ -469,7 +329,6 @@ BOOL *teslameter_spl_freeze_p = nil;
         DEBUG_LOG(@"%s レイテンシーが小さすぎ！", __func__);
     }
     teslameterSPLBufferFillIndex++;
-#endif
 #endif
 }
 

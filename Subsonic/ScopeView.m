@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2024  Takuji Matsugaki
+    Copyright (C) 2017-2022  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  */
 //
 //  ScopeView.m
-//
 
 #import <math.h>
 #import <Accelerate/Accelerate.h>
@@ -328,10 +327,8 @@
     if (! isHideRuler) {
         CGContextBeginPath(context);
     }
-    // 22050Hz の按分が基本なので、インデックスの最大値は、FFT_HALF_SAMPLE_RATE。
-    // 1目盛310μs にする。更新される周期は 5.8ms=5800μs
-//    Float32 unit = 4096.0 / 176400.0;   // 0.002321秒(2321μs)
-    NSUInteger times = 23;   // 1目盛100μsにする。
+    // 22050Hz の按分が基本
+    NSUInteger times = 23;
     Float32 ruler_dh = (width * 0.002300 / 0.002321) / times;
     NSUInteger mod = scaleX > 2.0 ? 1 : 5;
 
@@ -570,7 +567,6 @@
 }
 
 - (Float32) peekData:(NSInteger)index {
-#if QUEUE
     @synchronized (self) {
         if (_dataTail <= scopeBufferSize) {
             return _rawData[index];
@@ -578,11 +574,6 @@
             return _rawData[(index + _dataTail + (scopeBufferSize - 1)) % scopeBufferSize];
         }
     }
-#else
-    @synchronized (self) {
-        return _rawData[index];
-    }
-#endif
 }
 
 - (void) updateMySelf {
@@ -859,62 +850,6 @@
                         rect:(CGRect)rect
 {
     return;
-    // このグラフにスクロールインジケーターは似合わない。
-    if (scrollBarVisibility) {
-#if 1
-        CGRect frame = CGGraphRectMake(rect);
-        CGFloat org_x = frame.origin.x;
-        CGFloat org_y = frame.origin.y;
-        CGFloat width = frame.size.width;
-        CGFloat height = frame.size.height;
-        
-        if (_pinchScaleX > 0 && _panOffset.x <= 0) {
-            CGFloat hpos = org_x + 5.0;
-            CGFloat vpos = org_y + height - 5.0;
-            
-            CGContextSetLineWidth(context, kScrollBarLineWidth);
-            CGContextSetStrokeColorWithColor(context, [ColorUtil vfdOn].CGColor);
-            
-            CGContextBeginPath(context);
-            CGContextMoveToPoint(context, hpos - _panOffset.x / _pinchScaleX, vpos);
-            CGContextAddLineToPoint(context, hpos - _panOffset.x / _pinchScaleX + width / _pinchScaleX - 15.0, vpos);
-            CGContextStrokePath(context);
-        }
-        if (_pinchScaleY > 0 && _panOffset.y <= 0) {
-            CGFloat hpos = org_x + width - 5.0;
-            CGFloat vpos = org_y + 5.0;
-            
-            CGContextSetLineWidth(context, kScrollBarLineWidth);
-            CGContextSetStrokeColorWithColor(context, [ColorUtil vfdOn].CGColor);
-            
-            CGContextBeginPath(context);
-            CGContextMoveToPoint(context, hpos, vpos - _panOffset.y / _pinchScaleY);
-            CGContextAddLineToPoint(context, hpos, vpos - _panOffset.y / _pinchScaleY + height / _pinchScaleY - 15.0);
-            CGContextStrokePath(context);
-        }
-#else
-        if (_pinchScaleX > 0 && _panOffset.x <= 0) {
-            CGFloat hpos = self.frame.origin.x;
-            CGFloat width = self.frame.size.width;
-            CGFloat leadingRatio = (hpos - _panOffset.x / _pinchScaleX) / width;
-            CGFloat contentRatio = (hpos - _panOffset.x / _pinchScaleX + width / _pinchScaleX) / width;
-            
-            _hScrollBar.leadingRatio = leadingRatio;
-            _hScrollBar.contentRatio = contentRatio;
-            [_hScrollBar setNeedsDisplay];
-        }
-        if (_pinchScaleY > 0 && _panOffset.y <= 0) {
-            CGFloat vpos = self.frame.origin.y;
-            CGFloat height = self.frame.size.height;
-            CGFloat leadingRatio = (vpos - _panOffset.y / _pinchScaleY) / height;
-            CGFloat contentRatio = (vpos - _panOffset.y / _pinchScaleY + height / _pinchScaleY) / height;
-            
-            _vScrollBar.leadingRatio = leadingRatio;
-            _vScrollBar.contentRatio = contentRatio;
-            [_vScrollBar setNeedsDisplay];
-        }
-#endif
-    }
 }
 
 - (void) hideScrollIndicator {

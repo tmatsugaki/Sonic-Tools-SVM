@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2024  Takuji Matsugaki
+    Copyright (C) 2017-2022  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  */
 //
 //  UserDefaults
-//
 
 #import "UserDefaults.h"
 #import "Environment.h"
@@ -60,41 +59,9 @@ static UserDefaults *sharedDefaults = nil;
         _numChannels = 2;
         [[NSUserDefaults standardUserDefaults] setInteger:_numChannels forKey:kAVNumberOfChannelsKey];
     }
-#if 0
-    _fftPoints = [[NSUserDefaults standardUserDefaults] integerForKey:kAVFFTPointsKey];
-    if (_fftPoints == 0) {
-        _fftPoints = 4096;
-        [[NSUserDefaults standardUserDefaults] setInteger:_fftPoints forKey:kAVFFTPointsKey];
-    }
-    _sampleRate = [[NSUserDefaults standardUserDefaults] floatForKey:kAVSampleRateKey];
-    if (_sampleRate == 0.0) {
-        _sampleRate = 44100.0;
-        [[NSUserDefaults standardUserDefaults] setInteger:_sampleRate forKey:kAVSampleRateKey];
-    }
-    _frameSize = [[NSUserDefaults standardUserDefaults] floatForKey:kAVFrameSizeKey];
-    if (_frameSize == 0.0) {
-        _frameSize = 2048.0;
-        [[NSUserDefaults standardUserDefaults] setInteger:_sampleRate forKey:kAVFrameSizeKey];
-    }
-#else
-#if 0 // コレがデフォルト
-    _sampleRate = 44100.0;
-    _fftPoints  = 4096;
-    _frameSize  = 2048.0;
-#elif 1
     _sampleRate = 44100.0;
     _fftPoints  = 4096;
     _frameSize  = 4096.0;
-#elif 0
-    _sampleRate = 88200.0;
-    _fftPoints  = 8192;
-    _frameSize  = 4096.0;
-#elif 0
-    _sampleRate = 176400.0;
-    _fftPoints  = 4096;
-    _frameSize  = 2048.0;
-#endif
-#endif
 }
 
 + (id) allocWithZone:(NSZone *)zone {
@@ -170,5 +137,4 @@ static UserDefaults *sharedDefaults = nil;
     }
     return gain;
 }
-
 @end

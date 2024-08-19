@@ -84,10 +84,10 @@ static bool setupRemoteIO( AudioUnit & inRemoteIOUnit, AURenderCallbackStruct in
 // name: silenceData()
 // desc: zero out a buffer list of audio data
 //-----------------------------------------------------------------------------
-void silenceData(AudioBufferList * inData)
+void silenceData( AudioBufferList * inData )
 {
-    for (UInt32 i = 0; i < inData->mNumberBuffers; i++)
-        memset(inData->mBuffers[i].mData, 0, inData->mBuffers[i].mDataByteSize);
+    for( UInt32 i = 0; i < inData->mNumberBuffers; i++ )
+        memset( inData->mBuffers[i].mData, 0, inData->mBuffers[i].mDataByteSize );
 }
 
 
@@ -97,22 +97,22 @@ void silenceData(AudioBufferList * inData)
 // name: convertToUser()
 // desc: convert to user data (stereo)
 //-----------------------------------------------------------------------------
-void convertToUser(AudioBufferList * inData, Float32 * buffy,
-                   UInt32 numFrames, UInt32 & actualFrames)
+void convertToUser( AudioBufferList * inData, Float32 * buffy, 
+                    UInt32 numFrames, UInt32 & actualFrames )
 {
     // make sure there are exactly two channels
-    assert(inData->mNumberBuffers == MoAudio::m_numChannels);
+    assert( inData->mNumberBuffers == MoAudio::m_numChannels );
     // get number of frames
     UInt32 inFrames = inData->mBuffers[0].mDataByteSize / sizeof(SInt32);
     // make sure enough space
-    assert(inFrames <= numFrames);
+    assert( inFrames <= numFrames );
     // channels
     SInt32 * left = (SInt32 *)inData->mBuffers[0].mData;
     SInt32 * right = (SInt32 *)inData->mBuffers[1].mData;
     // fixed to float scaling factor
     Float32 factor = (Float32)(1 << 24);
     // interleave (AU is by default non interleaved)
-    for (UInt32 i = 0; i < inFrames; i++)
+    for( UInt32 i = 0; i < inFrames; i++ )
     {
         // convert (AU is by default 8.24 fixed)
         buffy[2*i] = ((Float32)left[i]) / factor;
@@ -129,21 +129,21 @@ void convertToUser(AudioBufferList * inData, Float32 * buffy,
 // name: convertFromUser()
 // desc: convert from user data (stereo)
 //-----------------------------------------------------------------------------
-void convertFromUser(AudioBufferList * inData, Float32 * buffy, UInt32 numFrames)
+void convertFromUser( AudioBufferList * inData, Float32 * buffy, UInt32 numFrames )
 {
     // make sure there are exactly two channels
-    assert(inData->mNumberBuffers == MoAudio::m_numChannels);
+    assert( inData->mNumberBuffers == MoAudio::m_numChannels );
     // get number of frames
     UInt32 inFrames = inData->mBuffers[0].mDataByteSize / 4;
     // make sure enough space
-    assert(inFrames <= numFrames);
+    assert( inFrames <= numFrames );
     // channels
     SInt32 * left = (SInt32 *)inData->mBuffers[0].mData;
     SInt32 * right = (SInt32 *)inData->mBuffers[1].mData;
     // fixed to float scaling factor
     Float32 factor = (Float32)(1 << 24);
     // interleave (AU is by default non interleaved)
-    for (UInt32 i = 0; i < inFrames; i++)
+    for( UInt32 i = 0; i < inFrames; i++ )
     {
         // convert (AU is by default 8.24 fixed)
         left[i] = (SInt32)(buffy[2*i] * factor);
@@ -164,18 +164,18 @@ static OSStatus SMALLRenderProc(
     const AudioTimeStamp * inTimeStamp, 
     UInt32 inBusNumber, 
     UInt32 inNumberFrames, 
-    AudioBufferList * ioData)
+    AudioBufferList * ioData ) 
 {
     OSStatus err = noErr;
     
     // render if full-duplex available and enabled
-    if (MoAudio::m_handleInput)
+    if( MoAudio::m_handleInput )
     {
-        err = AudioUnitRender( MoAudio::m_au, ioActionFlags, inTimeStamp, 1, inNumberFrames, ioData);
-        if (err)
+        err = AudioUnitRender( MoAudio::m_au, ioActionFlags, inTimeStamp, 1, inNumberFrames, ioData );
+        if( err )
         {
             // print error
-            printf("MoAudio: render procedure encountered error %d\n", (int)err);
+            printf( "MoAudio: render procedure encountered error %d\n", (int)err );
             return err;
         }
     }
@@ -184,19 +184,18 @@ static OSStatus SMALLRenderProc(
     UInt32 actualFrames = 0;
     
     // convert
-    convertToUser( ioData, MoAudio::m_info->m_ioBuffer, MoAudio::m_info->m_bufferSize, actualFrames);
+    convertToUser( ioData, MoAudio::m_info->m_ioBuffer, MoAudio::m_info->m_bufferSize, actualFrames );
     
     // callback
-    MoAudio::m_callback( MoAudio::m_info->m_ioBuffer, actualFrames, MoAudio::m_bindle);
+    MoAudio::m_callback( MoAudio::m_info->m_ioBuffer, actualFrames, MoAudio::m_bindle );
     
     // convert back
-    convertFromUser( ioData, MoAudio::m_info->m_ioBuffer, MoAudio::m_info->m_bufferSize);
+    convertFromUser( ioData, MoAudio::m_info->m_ioBuffer, MoAudio::m_info->m_bufferSize );
     
     // mute?
-    if (MoAudio::m_isMute)
-    {
-        silenceData(ioData);
-    }
+    if( MoAudio::m_isMute )
+    { silenceData( ioData ); }
+    
     return err;
 }
 
@@ -207,64 +206,67 @@ static OSStatus SMALLRenderProc(
 // name: rioInterruptionListener()
 // desc: handler for interruptions to start and end
 //-----------------------------------------------------------------------------
-static void rioInterruptionListener( void * inUserData, UInt32 inInterruption)
+static void rioInterruptionListener( void * inUserData, UInt32 inInterruption )
 {
     // printf( "Session interrupted! --- %s ---", 
     //     inInterruption == kAudioSessionBeginInterruption 
-    //     ? "Begin Interruption" : "End Interruption");
+    //     ? "Begin Interruption" : "End Interruption" );
     
     AudioUnit * rio = (AudioUnit *)inUserData;
     
 #if 0
     // end
-    if (inInterruption == kAudioSessionEndInterruption)
+    if( inInterruption == kAudioSessionEndInterruption )
     {
         // make sure we are again the active session
-#if OLD
-        AudioSessionSetActive(true);
+#if 0
+        AudioSessionSetActive( true );
 #else
         NSError *activationError = nil;
         [[AVAudioSession sharedInstance] setActive: YES error: &activationError];
 #endif
-        AudioOutputUnitStart(*rio);
+        AudioOutputUnitStart( *rio );
     }
     
     // begin
-    if (inInterruption == kAudioSessionBeginInterruption)
-        AudioOutputUnitStop(*rio);
+    if( inInterruption == kAudioSessionBeginInterruption )
+        AudioOutputUnitStop( *rio );
 #else
     // TAK
     if (rio == NULL) {
         DEBUG_LOG(@"%s rio should not be NULL!?", __func__);
     }
     // end
-    if (inInterruption == kAudioSessionEndInterruption)
+    if( inInterruption == kAudioSessionEndInterruption )
     {
         // make sure we are again the active session
-#if OLD
-        AudioSessionSetActive(true);
+#if 0
+        AudioSessionSetActive( true );
 #else
         NSError *activationError = nil;
         [[AVAudioSession sharedInstance] setActive: YES error: &activationError];
 #endif
         if (rio) {
-            AudioOutputUnitStart(*rio);
+            AudioOutputUnitStart( *rio );
         }
     }
     
     // begin
-    if (inInterruption == kAudioSessionBeginInterruption && rio) {
-        AudioOutputUnitStop(*rio);
+    if( inInterruption == kAudioSessionBeginInterruption && rio ) {
+        AudioOutputUnitStop( *rio );
     }
 #endif
 }
+
+
+
 
 //-----------------------------------------------------------------------------
 // name: propListener()
 // desc: audio session property listener
 //-----------------------------------------------------------------------------
-static void propListener(void * inClientData, AudioSessionPropertyID inID,
-                         UInt32 inDataSize, const void * inData)
+static void propListener( void * inClientData, AudioSessionPropertyID inID,
+                          UInt32 inDataSize, const void * inData )
 {
     NSDictionary *routeDictionary = (__bridge NSDictionary *)inData;
     NSInteger reason = ((NSNumber *) [routeDictionary objectForKey:((NSString *) CFSTR(kAudioSession_AudioRouteChangeKey_Reason))]).intValue;
@@ -300,27 +302,27 @@ static void propListener(void * inClientData, AudioSessionPropertyID inID,
     }
 
     // detect audio route change
-    if (inID == kAudioSessionProperty_AudioRouteChange)
+    if( inID == kAudioSessionProperty_AudioRouteChange )
     {
         // status code
         OSStatus err;
 
         // if there was a route change, we need to dispose the current rio unit and create a new one
-        err = AudioComponentInstanceDispose(MoAudio::m_au);
-        if (err)
+        err = AudioComponentInstanceDispose( MoAudio::m_au );
+        if( err )
         {
             // TODO: "couldn't dispose remote i/o unit"
             return;
         }
         
         // set up
-        setupRemoteIO(MoAudio::m_au, MoAudio::m_renderProc, MoAudio::m_info->m_dataFormat);
+        setupRemoteIO( MoAudio::m_au, MoAudio::m_renderProc, MoAudio::m_info->m_dataFormat );
             
         UInt32 size = sizeof(MoAudio::m_hwSampleRate);
         // get sample rate
-        err = AudioSessionGetProperty(kAudioSessionProperty_CurrentHardwareSampleRate,
-                                      &size, &MoAudio::m_hwSampleRate);
-        if (err)
+        err = AudioSessionGetProperty( kAudioSessionProperty_CurrentHardwareSampleRate, 
+                                       &size, &MoAudio::m_hwSampleRate );
+        if( err )
         {
             // TODO: "couldn't get new sample rate"
             return;
@@ -330,8 +332,8 @@ static void propListener(void * inClientData, AudioSessionPropertyID inID,
         MoAudio::checkInput();
         
         // start audio unit
-        err = AudioOutputUnitStart(MoAudio::m_au);
-        if (err)
+        err = AudioOutputUnitStart( MoAudio::m_au );
+        if( err )
         {
             // TODO: "couldn't start unit"
             return;
@@ -340,29 +342,29 @@ static void propListener(void * inClientData, AudioSessionPropertyID inID,
         // get route
         CFStringRef newRoute;
         size = sizeof(CFStringRef);
-        err = AudioSessionGetProperty(kAudioSessionProperty_AudioRoute, &size, &newRoute);
-        if (err)
+        err = AudioSessionGetProperty( kAudioSessionProperty_AudioRoute, &size, &newRoute );
+        if( err )
         {
             // TODO: "couldn't get new audio route"
             return;
         }
         
         // check route
-        if (newRoute)
+        if( newRoute )
         {
-            // CFShow(newRoute);
-            if (CFStringCompare(newRoute, CFSTR("Headset"), NULL) == kCFCompareEqualTo)
+            // CFShow( newRoute );
+            if( CFStringCompare( newRoute, CFSTR("Headset"), NULL ) == kCFCompareEqualTo )
             { }
-            else if (CFStringCompare(newRoute, CFSTR("Receiver"), NULL) == kCFCompareEqualTo)
+            else if( CFStringCompare( newRoute, CFSTR("Receiver" ), NULL ) == kCFCompareEqualTo )
             { }         
-            else if (CFStringCompare(newRoute, CFSTR("ReceiverAndMicrophone"), NULL) == kCFCompareEqualTo)
+            else if( CFStringCompare( newRoute, CFSTR("ReceiverAndMicrophone" ), NULL ) == kCFCompareEqualTo )
             { /* イヤホン */
                 UInt32 audioRouteOverride = kAudioSessionOverrideAudioRoute_Speaker;
                 AudioSessionSetProperty (kAudioSessionProperty_OverrideAudioRoute,
                                          sizeof(audioRouteOverride),
                                          &audioRouteOverride);
             }
-            else if (CFStringCompare( newRoute, CFSTR("SpeakerAndMicrophone"), NULL) == kCFCompareEqualTo)
+            else if( CFStringCompare( newRoute, CFSTR("SpeakerAndMicrophone" ), NULL ) == kCFCompareEqualTo )
             { /* デフォルト */ }
             else // unknown
             { }
@@ -378,8 +380,8 @@ static void propListener(void * inClientData, AudioSessionPropertyID inID,
 // name: setupRemoteIO()
 // desc: setup Audio Unit Remote I/O
 //-----------------------------------------------------------------------------
-static bool setupRemoteIO(AudioUnit & inRemoteIOUnit, AURenderCallbackStruct inRenderProc,
-                          AudioStreamBasicDescription & outFormat)
+static bool setupRemoteIO( AudioUnit & inRemoteIOUnit, AURenderCallbackStruct inRenderProc,
+                    AudioStreamBasicDescription & outFormat )
 {
     // open the output unit
     AudioComponentDescription desc;
@@ -390,7 +392,7 @@ static bool setupRemoteIO(AudioUnit & inRemoteIOUnit, AURenderCallbackStruct inR
     desc.componentFlagsMask = 0;
     
     // find next component
-    AudioComponent comp = AudioComponentFindNext(NULL, &desc);
+    AudioComponent comp = AudioComponentFindNext( NULL, &desc );
     
     // status code
     OSStatus err;
@@ -399,8 +401,8 @@ static bool setupRemoteIO(AudioUnit & inRemoteIOUnit, AURenderCallbackStruct inR
     AudioStreamBasicDescription localFormat;
     
     // open remote I/O unit
-    err = AudioComponentInstanceNew(comp, &inRemoteIOUnit);
-    if (err)
+    err = AudioComponentInstanceNew( comp, &inRemoteIOUnit );
+    if( err )
     {
         // TODO: "couldn't open the remote I/O unit"
         return false;
@@ -409,17 +411,17 @@ static bool setupRemoteIO(AudioUnit & inRemoteIOUnit, AURenderCallbackStruct inR
     UInt32 one = 1;
     // enable input
     err = AudioUnitSetProperty( inRemoteIOUnit, kAudioOutputUnitProperty_EnableIO, 
-                                kAudioUnitScope_Input, 1, &one, sizeof(one));
-    if (err)
+                                kAudioUnitScope_Input, 1, &one, sizeof(one) );
+    if( err )
     {
         // TODO: "couldn't enable input on the remote I/O unit"
         return false;
     }
 
     // set render proc
-    err = AudioUnitSetProperty(inRemoteIOUnit, kAudioUnitProperty_SetRenderCallback,
-                               kAudioUnitScope_Input, 0, &inRenderProc, sizeof(inRenderProc));
-    if (err)
+    err = AudioUnitSetProperty( inRemoteIOUnit, kAudioUnitProperty_SetRenderCallback,
+                                kAudioUnitScope_Input, 0, &inRenderProc, sizeof(inRenderProc) );
+    if( err )
     {
         // TODO: "couldn't set remote i/o render callback"
         return false;
@@ -427,9 +429,9 @@ static bool setupRemoteIO(AudioUnit & inRemoteIOUnit, AURenderCallbackStruct inR
         
     UInt32 size = sizeof(localFormat);
     // get and set client format
-    err = AudioUnitGetProperty(inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
-                               kAudioUnitScope_Input, 0, &localFormat, &size);
-    if (err)
+    err = AudioUnitGetProperty( inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
+                                kAudioUnitScope_Input, 0, &localFormat, &size );
+    if( err )
     {
         // TODO: "couldn't get the remote I/O unit's output client format"
         return false;
@@ -451,9 +453,9 @@ static bool setupRemoteIO(AudioUnit & inRemoteIOUnit, AURenderCallbackStruct inR
     localFormat.mBytesPerPacket = 4;
     
     // set stream property
-    err = AudioUnitSetProperty(inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
-                               kAudioUnitScope_Input, 0, &localFormat, sizeof(localFormat));
-    if (err)
+    err = AudioUnitSetProperty( inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
+                                kAudioUnitScope_Input, 0, &localFormat, sizeof(localFormat) );
+    if( err )
     {
         // TODO: "couldn't set the remote I/O unit's input client format"
         return false;
@@ -461,32 +463,33 @@ static bool setupRemoteIO(AudioUnit & inRemoteIOUnit, AURenderCallbackStruct inR
     
     size = sizeof(outFormat);
     // get it again
-    err = AudioUnitGetProperty(inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
-                               kAudioUnitScope_Input, 0, &outFormat, &size);
-    if (err)
+    err = AudioUnitGetProperty( inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
+                                kAudioUnitScope_Input, 0, &outFormat, &size );
+    if( err )
     {
         // TODO: "couldn't get the remote I/O unit's output client format"
         return false;
     }
-    err = AudioUnitSetProperty(inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
-                               kAudioUnitScope_Output, 1, &outFormat, sizeof(outFormat));
-    if (err)
+    err = AudioUnitSetProperty( inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
+                                kAudioUnitScope_Output, 1, &outFormat, sizeof(outFormat) );
+    if( err )
     {
         // TODO: "couldn't set the remote I/O unit's input client format"
         return false;
     }
 
     // print the format
-    // printf( "format for remote i/o:\n");
+    // printf( "format for remote i/o:\n" );
     // outFormat.Print();
 
     // initialize remote I/O unit
-    err = AudioUnitInitialize(inRemoteIOUnit);
-    if (err)
+    err = AudioUnitInitialize( inRemoteIOUnit );
+    if( err )
     {
         // TODO: "couldn't initialize the remote I/O unit"
         return false;
     }
+
     return true;
 }
 
@@ -497,21 +500,17 @@ static bool setupRemoteIO(AudioUnit & inRemoteIOUnit, AURenderCallbackStruct inR
 // name: init()
 // desc: initialize the MoAudio
 //-----------------------------------------------------------------------------
-bool MoAudio::init(Float64 srate, UInt32 frameSize, UInt32 numChannels)
+bool MoAudio::init( Float64 srate, UInt32 frameSize, UInt32 numChannels )
 {
-    // return status code
-    OSStatus err;
-    UInt32 size;
-
     // sanity check
-    if (m_hasInit)
+    if( m_hasInit )
     {
         // TODO: error message
         return false;
     }
     
     // TODO: fix this
-    assert(numChannels == 2);
+    assert( numChannels == 2 );
     
     // set audio unit callback
     m_renderProc.inputProc = SMALLRenderProc;
@@ -534,28 +533,31 @@ bool MoAudio::init(Float64 srate, UInt32 frameSize, UInt32 numChannels)
     m_info->m_done = 0;
 
     // bound parameters
-    if (frameSize > m_info->m_bufferSize)
+    if( frameSize > m_info->m_bufferSize )
         frameSize = m_info->m_bufferSize;
-    if (numChannels != 2)
+    if( numChannels != 2 )
         numChannels = 2;
     
     // copy parameters
     m_srate = srate;
     m_frameSize = frameSize;
     m_numChannels = numChannels;
+
+    // return status code
+    OSStatus err;
     
     // initialize and configure the audio session
-    err = AudioSessionInitialize(NULL, NULL, rioInterruptionListener, m_au);
-    if (err)
+    err = AudioSessionInitialize( NULL, NULL, rioInterruptionListener, m_au );
+    if( err )
     {
         // TODO: "couldn't initialize audio session"
         return false;
     }
     
     // set audio session active
-#if OLD
-    err = AudioSessionSetActive(true);
-    if (err)
+#if 0
+    err = AudioSessionSetActive( true );
+    if( err )
     {
         // TODO: "couldn't set audio session active\n"
         return false;
@@ -571,67 +573,70 @@ bool MoAudio::init(Float64 srate, UInt32 frameSize, UInt32 numChannels)
 
     UInt32 category = kAudioSessionCategory_PlayAndRecord;
     // set audio category
-    err = AudioSessionSetProperty( kAudioSessionProperty_AudioCategory, sizeof(category), &category);
-    if (err)
+    err = AudioSessionSetProperty( kAudioSessionProperty_AudioCategory, sizeof(category), &category );
+    if( err )
     {
         // TODO: "couldn't set audio category"
         return false;
     }
 
     // set property listener
-    err = AudioSessionAddPropertyListener(kAudioSessionProperty_AudioRouteChange, propListener, NULL);
-    if (err)
+    err = AudioSessionAddPropertyListener( kAudioSessionProperty_AudioRouteChange, propListener, NULL );
+    if( err )
     {
         // TODO: "couldn't set property listener"
         return false;
     }
     
-    // check for headset
-    // don't override if headset is plugged in
-    
-    // get route
-    CFStringRef route;
-    size = sizeof(CFStringRef);
-    err = AudioSessionGetProperty(kAudioSessionProperty_AudioRoute, &size, &route);
-    if (err)
+    // check for >= OS 2.1?
     {
-        // TODO: "couldn't get new audio route\n"
-    }
-
-    UInt32 override;
-    
-    if (route) {
+        // check for headset
+        // dont override if headset is plugged in
+        
+        // get route
+        CFStringRef route;
+        UInt32 size = sizeof(CFStringRef);
+        err = AudioSessionGetProperty( kAudioSessionProperty_AudioRoute, &size, &route );
+        if( err )
+        {
+            // TODO: "couldn't get new audio route\n"
+        }
+        
+        UInt32 override;
+        
         CFRange range = CFStringFind(route, CFSTR("Headset"), 0);
-        if (range.location != kCFNotFound)
+        if(range.location != kCFNotFound)
         {
             override = kAudioSessionOverrideAudioRoute_None;
-        } else {
+        }
+        else
+        {
             range = CFStringFind(route, CFSTR("Headphone"), 0);
-            if (range.location != kCFNotFound)
+            if(range.location != kCFNotFound)
             {
                 override = kAudioSessionOverrideAudioRoute_None;
-            } else {
+            }
+            else
+            {
                 override = kAudioSessionOverrideAudioRoute_Speaker;
             }
         }
-    } else {
-        override = kAudioSessionOverrideAudioRoute_Speaker;
-    }
-    
-    // set speaker override
-    err = AudioSessionSetProperty(kAudioSessionProperty_OverrideAudioRoute, sizeof(override), &override);
-    if (err)
-    {
-        // TODO: "couldn't get new audio route\n"
-        return false;
+        
+        // set speaker override
+        err = AudioSessionSetProperty( kAudioSessionProperty_OverrideAudioRoute, sizeof(override), &override );
+        if( err )
+        {
+            // TODO: "couldn't get new audio route\n"
+            return false;
+        }        
     }
     
     // compute durations
     Float32 preferredBufferSize = (Float32)(frameSize / srate); // .020;
     // set I/O buffer duration
-    AudioSessionSetProperty(kAudioSessionProperty_PreferredHardwareIOBufferDuration,
-                            sizeof(preferredBufferSize), &preferredBufferSize);
-    if (err)
+    AudioSessionSetProperty( kAudioSessionProperty_PreferredHardwareIOBufferDuration,
+                             sizeof(preferredBufferSize), &preferredBufferSize );
+    if( err )
     {
         // TODO: "couldn't set i/o buffer duration"
         return false;
@@ -639,25 +644,25 @@ bool MoAudio::init(Float64 srate, UInt32 frameSize, UInt32 numChannels)
 
     Float64 preferredSampleRate = srate;
     // set sample rate
-    AudioSessionSetProperty(kAudioSessionProperty_PreferredHardwareSampleRate,
-                            sizeof(preferredSampleRate), &preferredSampleRate);
-    if (err)
+    AudioSessionSetProperty( kAudioSessionProperty_PreferredHardwareSampleRate,
+                             sizeof(preferredSampleRate), &preferredSampleRate );
+    if( err )
     {
         // TODO: "couldn't set preferred sample rate"
         return false;
     }
     
-    size = sizeof(MoAudio::m_hwSampleRate);
+    UInt32 size = sizeof(MoAudio::m_hwSampleRate);
     // get sample rate
-    err = AudioSessionGetProperty(kAudioSessionProperty_CurrentHardwareSampleRate, &size, &MoAudio::m_hwSampleRate);
-    if (err)
+    err = AudioSessionGetProperty( kAudioSessionProperty_CurrentHardwareSampleRate, &size, &MoAudio::m_hwSampleRate );
+    if ( err )
     {
         // TODO: "couldn't get hw sample rate"
         return false;
     }
     
     // set up remote I/O
-    if (! setupRemoteIO( m_au, m_renderProc, m_info->m_dataFormat))
+    if( !setupRemoteIO( m_au, m_renderProc, m_info->m_dataFormat ) )
     {
         // TODO: "couldn't setup remote i/o unit"
         return false;
@@ -666,7 +671,7 @@ bool MoAudio::init(Float64 srate, UInt32 frameSize, UInt32 numChannels)
     // initialize buffer
     m_info->m_ioBuffer = new Float32[m_info->m_bufferSize * m_numChannels];
     // make sure
-    if (! m_info->m_ioBuffer)
+    if( !m_info->m_ioBuffer )
     {
         // TODO: "couldn't allocate memory for I/O buffer"
         return false;
@@ -681,24 +686,27 @@ bool MoAudio::init(Float64 srate, UInt32 frameSize, UInt32 numChannels)
     return true;
 }
 
+
+
+
 //-----------------------------------------------------------------------------
 // name: start()
 // desc: start the MoAudio
 //-----------------------------------------------------------------------------
-bool MoAudio::start(MoCallback callback, void * bindle)
+bool MoAudio::start( MoCallback callback, void * bindle )
 {
     // assert
-    assert(callback != NULL);
+    assert( callback != NULL );
 
     // sanity check
-    if (!m_hasInit)
+    if( !m_hasInit )
     {
         // TODO: error message
         return false;
     }
     
     // sanity check 2
-    if (m_isRunning)
+    if( m_isRunning )
     {
         // TODO: warning message
         return false;
@@ -713,31 +721,33 @@ bool MoAudio::start(MoCallback callback, void * bindle)
     OSStatus err;
 
     // start audio unit
-    err = AudioOutputUnitStart(m_au);
-    if (err)
+    err = AudioOutputUnitStart( m_au );
+    if( err )
     {
-        // TODO: "couldn't start audio unit...\n");
+        // TODO: "couldn't start audio unit...\n" );
         return false;
     }
+
     // started
     m_isRunning = true;
+
     return true;
 }
 
-bool MoAudio::start(MoCallback callback)
+bool MoAudio::start( MoCallback callback )
 {
     // assert
-    assert(callback != NULL);
+    assert( callback != NULL );
     
     // sanity check
-    if (!m_hasInit)
+    if( !m_hasInit )
     {
         // TODO: error message
         return false;
     }
     
     // sanity check 2
-    if (m_isRunning)
+    if( m_isRunning )
     {
         // TODO: warning message
         return false;
@@ -752,14 +762,16 @@ bool MoAudio::start(MoCallback callback)
     OSStatus err;
     
     // start audio unit
-    err = AudioOutputUnitStart(m_au);
-    if (err)
+    err = AudioOutputUnitStart( m_au );
+    if( err )
     {
-        // TODO: "couldn't start audio unit...\n");
+        // TODO: "couldn't start audio unit...\n" );
         return false;
     }
+    
     // started
     m_isRunning = true;
+    
     return true;
 }
 
@@ -771,15 +783,21 @@ bool MoAudio::start(MoCallback callback)
 void MoAudio::stop()
 {
     // sanity check
-    if (!m_isRunning)
+    if( !m_isRunning )
         return;
+    
     // status code
     OSStatus err;
+    
     // stop audio unit
-    err = AudioOutputUnitStop(m_au);
+    err = AudioOutputUnitStop( m_au );
+
     // flag
     m_isRunning = false;
 }
+
+
+
 
 //-----------------------------------------------------------------------------
 // name: shutdown()
@@ -788,17 +806,24 @@ void MoAudio::stop()
 void MoAudio::shutdown()
 {
     // sanity check
-    if (!m_hasInit)
+    if( !m_hasInit )
         return;
+
     // stop
     stop();
+    
     // flag
     m_hasInit = false;
+    
     // clear the callback
     m_callback = NULL;
+    
     // clean up
-    SAFE_DELETE(m_info);
+    SAFE_DELETE( m_info );
 }
+
+
+
 
 //-----------------------------------------------------------------------------
 // name: checkInput()
@@ -812,15 +837,20 @@ void MoAudio::checkInput()
     UInt32 has_input;
     UInt32 size = sizeof(has_input);
     // get property
-    OSStatus err = AudioSessionGetProperty(kAudioSessionProperty_AudioInputAvailable, &size, &has_input);
-    if (err)
+    OSStatus err = AudioSessionGetProperty( kAudioSessionProperty_AudioInputAvailable, &size, &has_input );        
+    if( err )
     {
         // TODO: "warning: unable to determine availability of audio input"
-    } else if (! has_input) {
+    }
+    else if( !has_input  )
+    {
         // TODO: "warning: full duplex enabled without available input"
         m_handleInput = false;
     }
 }
+
+
+
 
 //------------------------------------------------------------------------------
 // name: vibrate()
@@ -828,5 +858,5 @@ void MoAudio::checkInput()
 //------------------------------------------------------------------------------
 void MoAudio::vibrate()
 {
-    AudioServicesPlaySystemSound(kSystemSoundID_Vibrate);
+    AudioServicesPlaySystemSound( kSystemSoundID_Vibrate );
 }

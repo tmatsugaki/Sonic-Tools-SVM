@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2024  Takuji Matsugaki
+    Copyright (C) 2017-2022  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  */
 //
 //  ScopeViewController.m
-//
 
 #import <QuartzCore/QuartzCore.h>
 #import <Accelerate/Accelerate.h>
@@ -28,8 +27,6 @@
 #import "ScopeHelper.h"
 #import "mo_audio.hh" //stuff that helps set up low-level audio
 #include "Environment.h"
-
-//#undef SMART_REFRESH
 
 ScopeView * __weak scope_view = nil;
 BOOL *scope_freeze_p = nil;
@@ -49,6 +46,7 @@ static void initializeScopeAccumulator() {
     scopeAccumulator = (Float32 *) malloc([UserDefaults sharedManager].numChannels * sizeof(Float32)*scopeAccumulatorDataLength);
     scopeAccumulatorFillIndex = 0;
 }
+
 static void destroyScopeAccumulator() {
     if (scopeAccumulator!=NULL) {
         free(scopeAccumulator);
@@ -56,7 +54,6 @@ static void destroyScopeAccumulator() {
     }
     scopeAccumulatorFillIndex = 0;
 }
-#pragma unused(destroyScopeAccumulator)
 
 static BOOL scopeAccumulateFrames(Float32 *frames, UInt32 length) { //returned YES if full, NO otherwise.
     BOOL rc = NO;
@@ -93,20 +90,6 @@ void ScopeAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
     {
 //        flushScopeCount++;
         
-#if SMART_REFRESH
-        if (*scope_freeze_p == NO) {
-            // 負荷によってはフリッカーが出るので、dispatch_async 辞めた。
-            //                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-            for (NSUInteger i = 0; i < frameSize; i++) {
-                // リングバッファにデータを1つ追加する。
-                [scope_view enqueueData:buffer[i]];
-            }
-            emptyScopeAccumulator(); //empty the accumulator when finished
-            //                });
-        } else {
-            emptyScopeAccumulator(); //empty the accumulator when finished
-        }
-#else
         if (*scope_freeze_p == NO) {
             for (NSUInteger i = 0; i < frameSize; i++) {
                 // リングバッファにデータを1つ追加する。
@@ -124,7 +107,6 @@ void ScopeAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
             emptyScopeAccumulator(); //empty the accumulator when finished
 //            DEBUG_LOG(@"%s レイテンシーが小さすぎ！", __func__);
         }
-#endif
     }
     memset(buffer, 0, sizeof(Float32)*frameSize * numChannels);
 }
@@ -190,9 +172,6 @@ void ScopeAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
 #endif
     DEBUG_LOG(@"preferredIOBufferDuration=%g", [[AVAudioSession sharedInstance] preferredIOBufferDuration]);
 
-#if SMART_REFRESH
-    self.refreshTimer = [NSTimer scheduledTimerWithTimeInterval:REFRESH_INTERVAL target:self selector:@selector(postUpdate) userInfo:nil repeats:YES];
-#endif
     AVAudioSession *session = [AVAudioSession sharedInstance];
     if ([session respondsToSelector:@selector(requestRecordPermission:)]) {
         [session performSelector:@selector(requestRecordPermission:) withObject:^(BOOL granted) {
@@ -236,16 +215,6 @@ void ScopeAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
     } else {
         [_scopeView.triggerLevel setEnabled:YES];
     }
-
-#if (AUTO_LAYOUT && ADMOB)
-    // AdMob のセットアップ準備
-    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
-        _contentConstraint.constant = 80.0 + [self getAdmobAdHeight];
-        DEBUG_LOG(@"%g", _contentConstraint.constant);
-    } else {
-        _contentConstraint.constant = 80.0;
-    }
-#endif
     _scopeView.gainLabel.text = NSLocalizedString(@"Mic Gain", @"");
     _scopeView.gainSlider.minimumValue = 0.0; // 10^(0)=0dB 0〜40dB に変更した。May 25, 2021
     _scopeView.gainSlider.value = [[NSUserDefaults standardUserDefaults] floatForKey:kMicGainKey];
@@ -270,14 +239,6 @@ void ScopeAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
     } else {// とりあえず設定しないと落ちる。
         MoAudio::m_callback = ScopeAudioCallback;
     }
-
-#if (ADMOB == ON)
-    // AdMob のセットアップ
-    [self setupAdmob:adMobUnitID2];
-    if (self.banner.adSize.size.width != self.view.frame.size.width) {
-        [self setupAdmobFor_iPad:adMobUnitID2];
-    }
-#endif
 }
 
 - (void) viewWillDisappear:(BOOL)animated {
@@ -300,10 +261,7 @@ void ScopeAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
 
     // maintainPinch を実行する。
     [self.scopeView setNeedsLayout];
-    // バナービューの表示制御
-#if AUTO_LAYOUT
     _contentConstraint.constant = 80.0;
-#endif
 }
 #else
 - (void)viewWillTransitionToSize:(CGSize)size
@@ -313,10 +271,7 @@ void ScopeAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
 
     // maintainPinch を実行する。
     [self.scopeView setNeedsLayout];
-    // バナービューの表示制御
-#if AUTO_LAYOUT
     _contentConstraint.constant = 80.0;
-#endif
 }
 #endif
 
@@ -325,17 +280,6 @@ void ScopeAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
 
     // maintainPinch を実行する。
     [self.scopeView setNeedsLayout];
-
-#if (AUTO_LAYOUT && ADMOB)
-    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
-        _contentConstraint.constant = 80.0 + [self getAdmobAdHeight];
-    }
-#endif
-
-#if (ADMOB == ON)
-    // AdMob のセットアップ
-    [self setupAdmobFor_iPad:adMobUnitID2];
-#endif
 }
 #else
 - (void) traitCollectionDidChange: (UITraitCollection *) previousTraitCollection {
@@ -343,17 +287,6 @@ void ScopeAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
 
     // maintainPinch を実行する。
     [self.scopeView setNeedsLayout];
-    
-#if (AUTO_LAYOUT && ADMOB)
-    if (([Environment isIPad] || [Environment isMIPad] || [Environment isLIPad]) || ([Environment isIPhone4] == NO && [Environment isPortrait] == YES)) {
-        _contentConstraint.constant = 80.0 + [self getAdmobAdHeight];
-    }
-#endif
-    
-#if (ADMOB == ON)
-    // AdMob のセットアップ
-    [self setupAdmobFor_iPad:adMobUnitID2];
-#endif
 }
 #endif
 
@@ -383,7 +316,7 @@ void ScopeAudioCallback(Float32 *buffer, UInt32 frameSize, void *userData)
 //    if (result)
     {// MoAudio::init は MainViewController で一回だけやる。
         MoAudio::stop();
-        result = MoAudio::start( ScopeAudioCallback);
+        result = MoAudio::start( ScopeAudioCallback );
         if (result) {
             // マイクの AGC をオフにする。 <AudioToolbox/AudioToolbox.h>
 #if MEASUREMENT

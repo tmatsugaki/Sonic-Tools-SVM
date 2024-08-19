@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2024  Takuji Matsugaki
+    Copyright (C) 2017-2022  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,14 +17,10 @@
  */
 //
 //  ScopeViewController.h
-//
 
 #import <UIKit/UIKit.h>
 #import "definitions.h"
 #import "ScopeView.h"
-#if (ADMOB == ON)
-#import <GoogleMobileAds/GADBannerView.h>
-#endif
 #import "SubsonicViewController.h"
 
 //#define kScopeAgcKey              @"ScopeAGC"
@@ -41,10 +37,8 @@
 @interface ScopeViewController : SubsonicViewController <ScopeViewProtocol> {
 }
 @property (strong, nonatomic) IBOutlet ScopeView *scopeView;
-#if AUTO_LAYOUT
 @property (assign, nonatomic) IBOutlet NSLayoutConstraint *contentConstraint;
 @property (assign, nonatomic) IBOutlet NSLayoutConstraint *sliderConstraint;
-#endif
 @property (assign, nonatomic) BOOL freeze;
 @property (strong, nonatomic) NSTimer *refreshTimer;
 @end

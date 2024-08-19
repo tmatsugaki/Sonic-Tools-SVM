@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2024  Takuji Matsugaki
+    Copyright (C) 2017-2022  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,15 +17,11 @@
  */
 //
 //  TeslameterScopeViewController.h
-//
 
 #import <UIKit/UIKit.h>
 #import <CoreLocation/CoreLocation.h>
 #import "definitions.h"
 #import "TeslameterScopeView.h"
-#if (ADMOB == ON)
-#import <GoogleMobileAds/GADBannerView.h>
-#endif
 #import "SubsonicViewController.h"
 
 #define kTeslaScopeHideRulerKey         @"TeslaScopeHideRuler"
@@ -36,7 +32,7 @@
 #define kTeslaScopePanOffsetXKey        @"TeslaScopePanOffsetX"
 #define kTeslaScopePanOffsetYKey        @"TeslaScopePanOffsetY"
 
-#if (SMART_REFRESH || LOAD_DUMMY_DATA)
+#if LOAD_DUMMY_DATA
 #define REFRESH_INTERVAL            0.1     // 0.025s 25ms(40Hz) が望ましいが高CPU負荷、iPhone4S だと 0.075 辺りが限界。
 #else
 #define REFRESH_INTERVAL            STD_REFRESH_INTERVAL
@@ -46,9 +42,7 @@
     NSOperationQueue *queue;
 }
 @property (strong, nonatomic) IBOutlet TeslameterScopeView *teslameterScopeView;
-#if AUTO_LAYOUT
 @property (assign, nonatomic) IBOutlet NSLayoutConstraint *contentConstraint;
-#endif
 @property (assign, nonatomic) BOOL freeze;
 @property (strong, nonatomic) NSTimer *refreshTimer;
 @property (nonatomic, retain) CLLocationManager *locationManager;

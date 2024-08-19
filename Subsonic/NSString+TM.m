@@ -1,6 +1,6 @@
 /*
     Sonic Tools SVM (FFT Analyzer/RTA for iOS)
-    Copyright (C) 2017-2024  Takuji Matsugaki
+    Copyright (C) 2017-2022  Takuji Matsugaki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  */
 //
 //  NSString+TM.m
-//
 
 #import "NSString+TM.h"
 
@@ -73,7 +72,7 @@
 - (NSString *) replaceString:(NSString *)keyword
 				  withString:(NSString *)replacement {
     
-#if TEST
+#if 0
     if ([self length] && [self rangeOfString:keyword].location != NSNotFound) {
         NSMutableString *replacedStr = [[[NSMutableString alloc] initWithString:self] autorelease];
         [replacedStr replaceCharactersInRange:range withString:replacement];
