@@ -11,7 +11,7 @@ You can pinch (zoom) and pan (scroll) on measurement screens other than RTA and 
 ## Application example</br>
 · Record the present situation as quantitative evidence, such as by using recording and use it for the improvement of obstacles.</br>
 · Use it for science education.</br>
-· Use it along with the sweep generator to improve the acoustic characteristics of the listening room.</br>
+· Use it along with the sweep generator to improve the acoustic characteristics of the audio room.</br>
 
 ## Note</br>
 This application has an audio signal oscillation function, and depending on the operation it may generate sound that is harmful to the human body, so please refrain from using things like headphones or headsets. We are not responsible for damage caused by using that equipment.</br>
@@ -84,6 +84,3 @@ Despite this FFT analizer part is somewhat famous for detecting precise frequenc
  whether in an actino of a contract, tort or otherwise, arising from, out of</br>
  or in connection with the Software or the use or other dealings in the </br>
  software.</br>
- 
- ## コメント</br>
- コメントはほとんど入れていませんし、あってもほとんど日本語なので外国人の方は頑張ってください。
