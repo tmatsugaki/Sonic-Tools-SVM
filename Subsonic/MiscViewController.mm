@@ -241,10 +241,10 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
         
         //メールのテキストの指定
         [pickerCtl setSubject:subject];
-        [pickerCtl setToRecipients:[NSArray arrayWithObject:@"subsonic@rikki.mydns.jp"]];
+        [pickerCtl setToRecipients:[NSArray arrayWithObject:@"tmatsugaki@gmail.com"]];
         [pickerCtl setMessageBody:message isHTML:NO];
         
-        //        [pickerCtl addAttachmentData:[NSData dataWithContentsOfFile:partSummaryPath] mimeType:@"text/csv" fileName:partSummaryFileName];
+//        [pickerCtl addAttachmentData:[NSData dataWithContentsOfFile:partSummaryPath] mimeType:@"text/csv" fileName:partSummaryFileName];
         
         //メールコントローラのビューを開く
         [self presentViewController:pickerCtl animated:YES completion:nil];
