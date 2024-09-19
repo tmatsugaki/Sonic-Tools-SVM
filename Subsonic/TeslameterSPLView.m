@@ -341,8 +341,8 @@
         Float32 fract;
         Float32 hpos;
         Float32 volumeOffset;
-        Float32 rawMF = [self peekData:i];
-        Float32 clampedMF = MIN(rawMF, 500);
+        self.rawMF = [self peekData:i];
+        Float32 clampedMF = MIN(_rawMF, 500);
 //        volumeOffset = height * clampedMF / 100.0;    // 0μT〜100μT
         volumeOffset = height * clampedMF / 500.0;    // 0μT〜500μT
         fract = (1.0 * i / ((Float32) Tesla_SPL_BUFFER_SIZE));
@@ -355,8 +355,6 @@
                 CGContextAddLineToPoint(context, hpos + offset.x, bot_y - volumeOffset + offset.y);
             }
         }
-        self.clampedMF = clampedMF;
-        self.rawMF = rawMF;
     }
     CGContextStrokePath(context);
 
