@@ -90,5 +90,6 @@
 @property (assign, nonatomic) FILE *fp;
 @property (strong, nonatomic) NSTimer *logTimer;
 @property (assign, nonatomic) NSUInteger logCounter;
-@property (assign, nonatomic) Float64 rawMF;
+@property (assign, nonatomic) Float64 clampedMF; // for Drawing
+@property (assign, nonatomic) Float64 rawMF; // for CSV output
 @end
