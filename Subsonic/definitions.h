@@ -58,8 +58,8 @@
 
 #define CONSTRAINT_MAGIC            61.0
 
-#define FULL_DYNAMIC_RANGE_DECADE   8.0             // 16.0??
-#define FULL_DYNAMIC_RANGE_DECIBEL  160.0
+#define FULL_DYNAMIC_RANGE_DECADE   8.0             // 8.0
+#define FULL_DYNAMIC_RANGE_DECIBEL  160.0           // 160.0
 
 #define SPL_DYNAMIC_RANGE_DECADE    6.0
 #define SPL_DYNAMIC_RANGE_DECIBEL   120.0
