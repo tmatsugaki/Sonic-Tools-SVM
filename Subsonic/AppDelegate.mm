@@ -18,7 +18,7 @@
 //
 //  AppDelegate.m
 
-#import <StoreKit/SKStoreReviewController.h>
+//#import <StoreKit/SKStoreReviewController.h>
 #import "AppDelegate.h"
 #import "definitions.h"
 #import "Environment.h"
@@ -36,7 +36,7 @@
     
     [[UserDefaults sharedManager] initialize];
     
-    [SKStoreReviewController requestReview];
+//    [SKStoreReviewController requestReview];
     return YES;
 }
 

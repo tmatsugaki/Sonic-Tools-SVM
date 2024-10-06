@@ -85,8 +85,7 @@
 - (NSInteger) tableView:(UITableView *)tableView
   numberOfRowsInSection:(NSInteger)section {
     
-//    return 4;
-    return 3;
+    return 2;
 }
 
 // Customize the appearance of table view cells.
@@ -106,30 +105,17 @@
     //    cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     cell.backgroundColor = [UIColor clearColor];
     switch (indexPath.row) {
-#if 0
-        case 0:
-            title = NSLocalizedString(@"Support Mail", @"ご意見・不具合報告");
-            break;
-        case 1:
-            title = NSLocalizedString(@"GoWebsite", @"Webサイト");
-            break;
-        case 2:
-            title = NSLocalizedString(@"WriteReviews", @"レビューを書く");
-            break;
-        case 3:
-            title = NSLocalizedString(@"Other Apps", @"他のアプリ");
-            break;
-#else
         case 0:
             title = NSLocalizedString(@"Support Mail", @"ご意見・不具合報告");
             break;
         case 1:
             title = NSLocalizedString(@"Other Apps", @"他のアプリ");
             break;
+/*
         case 2:
             title = NSLocalizedString(@"WriteReviews", @"レビューを書く");
             break;
-#endif
+ */
     }
     if (imageName) {
         [cell.imageView setImage:[UIImage imageNamed:imageName]];
@@ -152,48 +138,6 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:NO];
     
     switch (indexPath.row) {
-#if 0
-        case 0: {// ご意見・不具合報告
-            NSString *appNameString = [[NSBundle mainBundle] objectForInfoDictionaryKey: @"CFBundleDisplayName"];
-            NSString *appVersionString = [[NSBundle mainBundle] objectForInfoDictionaryKey: @"CFBundleShortVersionString"];
-            NSString *sysVersionString = [[UIDevice currentDevice] systemVersion];
-            [self sendMailWithSubject:NSLocalizedString(@"Subsonic Support", @"Subsonic サポート") message:[NSString stringWithFormat:@"\n\n%@ %@\niOS %@", appNameString, appVersionString, sysVersionString]];
-        }
-            break;
-        case 1: {// Webサイト
-            NSString *urlStr = NSLocalizedString(@"https://rikkicat.wordpress.com/ios-apps-j/", @"https://rikkicat.wordpress.com/ios-apps-j/");
-            // NSURL *url = [NSURL URLWithString:[urlStr encodeURL:NSUTF8StringEncoding]];
-            // URL エンコードしないこと！！
-            NSURL *url = [NSURL URLWithString:urlStr];
-            
-            if ([[UIApplication sharedApplication] canOpenURL:url]) {
-                [[UIApplication sharedApplication] openURL:url];
-            }
-        }
-            break;
-        case 2: {// レビューを書く
-            NSString *urlStr = NSLocalizedString(@"https://itunes.apple.com/jp/app/fa-yaochekka/id814832089?l=ja&ls=1&mt=8", @"https://itunes.apple.com/jp/app/fa-yaochekka/id814832089?l=ja&ls=1&mt=8");
-//                NSURL *url = [NSURL URLWithString:[urlStr encodeURL:NSUTF8StringEncoding]];
-            // URL エンコードしないこと！！
-            NSURL *url = [NSURL URLWithString:urlStr];
-            
-            if ([[UIApplication sharedApplication] canOpenURL:url]) {
-                [[UIApplication sharedApplication] openURL:url];
-            }
-        }
-            break;
-        case 3: {// 他のアプリ
-            NSString *urlStr = NSLocalizedString(@"https://itunes.apple.com/jp/developer/rikki-systems-inc/id497295364", @"https://itunes.apple.com/jp/developer/rikki-systems-inc/id497295364");
-//                NSURL *url = [NSURL URLWithString:[urlStr encodeURL:NSUTF8StringEncoding]];
-            // URL エンコードしないこと！！
-            NSURL *url = [NSURL URLWithString:urlStr];
-            
-            if ([[UIApplication sharedApplication] canOpenURL:url]) {
-                [[UIApplication sharedApplication] openURL:url];
-            }
-        }
-            break;
-#else
         case 0: {// ご意見・不具合報告
             NSString *appNameString = [[NSBundle mainBundle] objectForInfoDictionaryKey: @"CFBundleDisplayName"];
             NSString *appVersionString = [[NSBundle mainBundle] objectForInfoDictionaryKey: @"CFBundleShortVersionString"];
@@ -212,9 +156,9 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
             }
         }
             break;
+/*
         case 2: {// レビューを書く
             NSString *urlStr = NSLocalizedString(@"https://itunes.apple.com/us/app/sonic-tools/id1245046029?mt=8", @"https://itunes.apple.com/jp/app/sonic-tools/id1245046029?mt=8");
-//                NSURL *url = [NSURL URLWithString:[urlStr encodeURL:NSUTF8StringEncoding]];
             // URL エンコードしないこと！！
             NSURL *url = [NSURL URLWithString:urlStr];
             
@@ -223,7 +167,7 @@ didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
             }
         }
             break;
-#endif
+ */
     }
 }
 
