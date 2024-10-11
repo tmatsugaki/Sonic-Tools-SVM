@@ -22,7 +22,7 @@
 #import <AudioToolbox/AudioToolbox.h>
 
 enum {
-    kSin, kSaw, kTriangle
+    kSin, kSaw, kTriangle, kPinkNoise, kBrownNoise
 };
 
 #define REFRESH_INTERVAL    STD_REFRESH_INTERVAL    // 0.05

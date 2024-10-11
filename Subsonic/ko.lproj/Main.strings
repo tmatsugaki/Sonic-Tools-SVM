@@ -103,6 +103,8 @@
 
 /* Class = "UISegmentedControl"; HOC-5K-5v5.segmentTitles[2] = "Triangular"; ObjectID = "HOC-5K-5v5"; */
 "HOC-5K-5v5.segmentTitles[2]" = "삼각형";
+"HOC-5K-5v5.segmentTitles[3]" = "핑크";
+"HOC-5K-5v5.segmentTitles[4]" = "갈색";
 
 /* Class = "UILabel"; text = "Max:"; ObjectID = "HeQ-Kk-IpC"; */
 "HeQ-Kk-IpC.text" = "최대:";

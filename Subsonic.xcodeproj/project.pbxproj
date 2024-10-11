@@ -13,6 +13,9 @@
 		0814BF921ECC6DBD00FF15C4 /* SevenSegmentDisplayView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0814BF911ECC6DBD00FF15C4 /* SevenSegmentDisplayView.m */; };
 		0814BF9A1ECC6E3A00FF15C4 /* ColorUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 0814BF971ECC6E3A00FF15C4 /* ColorUtil.m */; };
 		0814BF9D1ECC6E3A00FF15C4 /* Environment.m in Sources */ = {isa = PBXBuildFile; fileRef = 0814BF991ECC6E3A00FF15C4 /* Environment.m */; };
+		0827E0EA2CB90FE100A42860 /* BrownNoiseFilter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0827E0E92CB90FE100A42860 /* BrownNoiseFilter.mm */; };
+		0827E0EF2CB90FF500A42860 /* PinkNoiseFFT.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0827E0EE2CB90FF500A42860 /* PinkNoiseFFT.mm */; };
+		0827E0F02CB90FF500A42860 /* PinkNoise.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0827E0EC2CB90FF500A42860 /* PinkNoise.mm */; };
 		0829865F1ED85F3800E92D86 /* UIPinchGestureRecognizerAxis.m in Sources */ = {isa = PBXBuildFile; fileRef = 0829865E1ED85F3800E92D86 /* UIPinchGestureRecognizerAxis.m */; };
 		082C96BE1EEF3EFD005F7FF6 /* NSString+TM.m in Sources */ = {isa = PBXBuildFile; fileRef = 082C96BB1EEF3EFD005F7FF6 /* NSString+TM.m */; };
 		082C96BF1EEF3EFD005F7FF6 /* TextFieldUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 082C96BD1EEF3EFD005F7FF6 /* TextFieldUtil.m */; };
@@ -78,6 +81,12 @@
 		0814BF971ECC6E3A00FF15C4 /* ColorUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ColorUtil.m; sourceTree = "<group>"; };
 		0814BF981ECC6E3A00FF15C4 /* Environment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Environment.h; sourceTree = "<group>"; };
 		0814BF991ECC6E3A00FF15C4 /* Environment.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Environment.m; sourceTree = "<group>"; };
+		0827E0E82CB90FE100A42860 /* BrownNoiseFilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BrownNoiseFilter.h; sourceTree = "<group>"; };
+		0827E0E92CB90FE100A42860 /* BrownNoiseFilter.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BrownNoiseFilter.mm; sourceTree = "<group>"; };
+		0827E0EB2CB90FF500A42860 /* PinkNoise.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PinkNoise.h; sourceTree = "<group>"; };
+		0827E0EC2CB90FF500A42860 /* PinkNoise.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = PinkNoise.mm; sourceTree = "<group>"; };
+		0827E0ED2CB90FF500A42860 /* PinkNoiseFFT.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PinkNoiseFFT.h; sourceTree = "<group>"; };
+		0827E0EE2CB90FF500A42860 /* PinkNoiseFFT.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = PinkNoiseFFT.mm; sourceTree = "<group>"; };
 		0829865D1ED85F3800E92D86 /* UIPinchGestureRecognizerAxis.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UIPinchGestureRecognizerAxis.h; sourceTree = "<group>"; };
 		0829865E1ED85F3800E92D86 /* UIPinchGestureRecognizerAxis.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UIPinchGestureRecognizerAxis.m; sourceTree = "<group>"; };
 		08298DAA264FFA6500407B51 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Main.strings; sourceTree = "<group>"; };
@@ -348,6 +357,12 @@
 			children = (
 				08DCE6EB1EDBE9F8007B7EDB /* ToneGeneratorViewController.h */,
 				08DCE6EC1EDBE9F8007B7EDB /* ToneGeneratorViewController.mm */,
+				0827E0EB2CB90FF500A42860 /* PinkNoise.h */,
+				0827E0EC2CB90FF500A42860 /* PinkNoise.mm */,
+				0827E0ED2CB90FF500A42860 /* PinkNoiseFFT.h */,
+				0827E0EE2CB90FF500A42860 /* PinkNoiseFFT.mm */,
+				0827E0E82CB90FE100A42860 /* BrownNoiseFilter.h */,
+				0827E0E92CB90FE100A42860 /* BrownNoiseFilter.mm */,
 			);
 			name = ToneGeneratorViewController;
 			sourceTree = "<group>";
@@ -618,8 +633,11 @@
 				08DFEC0624C1267700FF466A /* WindowFunctionViewController.m in Sources */,
 				08DBA8961F108D4A003CE140 /* TeslameterSPLView.m in Sources */,
 				08F00F461EC6D18E0036ACED /* AppDelegate.mm in Sources */,
+				0827E0EF2CB90FF500A42860 /* PinkNoiseFFT.mm in Sources */,
+				0827E0F02CB90FF500A42860 /* PinkNoise.mm in Sources */,
 				08F00F491EC6D18E0036ACED /* SpectrumViewController.mm in Sources */,
 				08F00F831EC6DDF30036ACED /* MiscViewController.mm in Sources */,
+				0827E0EA2CB90FE100A42860 /* BrownNoiseFilter.mm in Sources */,
 				08AEB36622787DE000506422 /* FFTScopeSettings.m in Sources */,
 				08F00F431EC6D18E0036ACED /* main.m in Sources */,
 				08564A971ED6167C0042D38A /* AccelometerSPLViewController.mm in Sources */,
@@ -828,12 +846,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 228;
+				CURRENT_PROJECT_VERSION = 231;
 				DEVELOPMENT_TEAM = F42S2EFB55;
 				INFOPLIST_FILE = Subsonic/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 2.1.9;
+				MARKETING_VERSION = 2.1.11;
 				PRODUCT_BUNDLE_IDENTIFIER = jp.mydns.rikki.Subsonic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -847,12 +865,12 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 228;
+				CURRENT_PROJECT_VERSION = 231;
 				DEVELOPMENT_TEAM = F42S2EFB55;
 				INFOPLIST_FILE = Subsonic/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 2.1.9;
+				MARKETING_VERSION = 2.1.11;
 				PRODUCT_BUNDLE_IDENTIFIER = jp.mydns.rikki.Subsonic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

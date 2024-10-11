@@ -21,6 +21,8 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import "definitions.h"
 #import "ToneGeneratorViewController.h"
+#import "PinkNoise.h"
+#import "BrownNoiseFilter.h"
 #import "NSString+TM.h"
 #import "TextFieldUtil.h"
 
@@ -38,19 +40,21 @@ static AURenderCallbackStruct m_renderProc;
 NSDate *toneFlushDate = nil;
 NSUInteger sweepMode = kSweepNone;
 
+PinkNoise *m_pinkNoiseFilter = [[PinkNoise alloc] init];
+
 OSStatus renderTone(
                     ToneGeneratorViewController *inRefCon,
                     AudioUnitRenderActionFlags 	*ioActionFlags,
                     const AudioTimeStamp 		*inTimeStamp,
                     UInt32 						inBusNumber,
-                    UInt32 						inNumberFrames,
+                    UInt32 						inFrameSize,
                     AudioBufferList 			*ioData);
 //-----------------------------------------------------------------------------
 // name: setupRemoteIO()
 // desc: setup Audio Unit Remote I/O
 //-----------------------------------------------------------------------------
 static bool setupRemoteIO( AudioUnit & inRemoteIOUnit, AURenderCallbackStruct inRenderProc,
-                   AudioStreamBasicDescription & outASBD )
+                   AudioStreamBasicDescription & outASBD)
 {
     // open the output unit
     AudioComponentDescription desc;
@@ -62,7 +66,7 @@ static bool setupRemoteIO( AudioUnit & inRemoteIOUnit, AURenderCallbackStruct in
     desc.componentFlagsMask = 0;
     
     // find next component
-    AudioComponent defaultOutput = AudioComponentFindNext( NULL, &desc );
+    AudioComponent defaultOutput = AudioComponentFindNext(NULL, &desc);
     
     // status code
     OSStatus err;
@@ -71,8 +75,8 @@ static bool setupRemoteIO( AudioUnit & inRemoteIOUnit, AURenderCallbackStruct in
     AudioStreamBasicDescription localASBD;
     
     // open remote I/O unit
-    err = AudioComponentInstanceNew( defaultOutput, &inRemoteIOUnit );
-    if( err )
+    err = AudioComponentInstanceNew(defaultOutput, &inRemoteIOUnit);
+    if (err)
     {
         // TODO: "couldn't open the remote I/O unit"
         return false;
@@ -81,18 +85,18 @@ static bool setupRemoteIO( AudioUnit & inRemoteIOUnit, AURenderCallbackStruct in
 #if 0
     UInt32 one = 1;
     // enable input
-    err = AudioUnitSetProperty( inRemoteIOUnit, kAudioOutputUnitProperty_EnableIO,
-                               kAudioUnitScope_Input, 1, &one, sizeof(one) );
-    if( err )
+    err = AudioUnitSetProperty(inRemoteIOUnit, kAudioOutputUnitProperty_EnableIO,
+                               kAudioUnitScope_Input, 1, &one, sizeof(one));
+    if (err)
     {
         // TODO: "couldn't enable input on the remote I/O unit"
         return false;
     }
     
     // set render proc
-    err = AudioUnitSetProperty( inRemoteIOUnit, kAudioUnitProperty_SetRenderCallback,
-                               kAudioUnitScope_Input, 0, &inRenderProc, sizeof(inRenderProc) );
-    if( err )
+    err = AudioUnitSetProperty(inRemoteIOUnit, kAudioUnitProperty_SetRenderCallback,
+                               kAudioUnitScope_Input, 0, &inRenderProc, sizeof(inRenderProc));
+    if (err)
     {
         // TODO: "couldn't set remote i/o render callback"
         return false;
@@ -100,9 +104,9 @@ static bool setupRemoteIO( AudioUnit & inRemoteIOUnit, AURenderCallbackStruct in
     
     UInt32 size = sizeof(localASBD);
     // get and set client format
-    err = AudioUnitGetProperty( inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
-                               kAudioUnitScope_Input, 0, &localASBD, &size );
-    if( err )
+    err = AudioUnitGetProperty(inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
+                               kAudioUnitScope_Input, 0, &localASBD, &size);
+    if (err)
     {
         // TODO: "couldn't get the remote I/O unit's output client format"
         return false;
@@ -110,18 +114,18 @@ static bool setupRemoteIO( AudioUnit & inRemoteIOUnit, AURenderCallbackStruct in
 #else
     UInt32 one = 1;
     // enable input
-    err = AudioUnitSetProperty( inRemoteIOUnit, kAudioOutputUnitProperty_EnableIO,
-                               kAudioUnitScope_Output, 1, &one, sizeof(one) );
-    if( err )
+    err = AudioUnitSetProperty(inRemoteIOUnit, kAudioOutputUnitProperty_EnableIO,
+                               kAudioUnitScope_Output, 1, &one, sizeof(one));
+    if (err)
     {
         // TODO: "couldn't enable input on the remote I/O unit"
         return false;
     }
     
     // set render proc
-    err = AudioUnitSetProperty( inRemoteIOUnit, kAudioUnitProperty_SetRenderCallback,
-                               kAudioUnitScope_Output, 0, &inRenderProc, sizeof(inRenderProc) );
-    if( err )
+    err = AudioUnitSetProperty(inRemoteIOUnit, kAudioUnitProperty_SetRenderCallback,
+                               kAudioUnitScope_Output, 0, &inRenderProc, sizeof(inRenderProc));
+    if (err)
     {
         // TODO: "couldn't set remote i/o render callback"
         return false;
@@ -130,8 +134,8 @@ static bool setupRemoteIO( AudioUnit & inRemoteIOUnit, AURenderCallbackStruct in
     UInt32 size = sizeof(localASBD);
     // get and set client format
     err = AudioUnitGetProperty( inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
-                               kAudioUnitScope_Output, 0, &localASBD, &size );
-    if( err )
+                               kAudioUnitScope_Output, 0, &localASBD, &size);
+    if (err)
     {
         // TODO: "couldn't get the remote I/O unit's output client format"
         return false;
@@ -160,8 +164,8 @@ static bool setupRemoteIO( AudioUnit & inRemoteIOUnit, AURenderCallbackStruct in
     
     // set stream property
     err = AudioUnitSetProperty( inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
-                               kAudioUnitScope_Input, 0, &localASBD, sizeof(localASBD) );
-    if( err )
+                               kAudioUnitScope_Input, 0, &localASBD, sizeof(localASBD));
+    if (err)
     {
         // TODO: "couldn't set the remote I/O unit's input client format"
         return false;
@@ -169,27 +173,27 @@ static bool setupRemoteIO( AudioUnit & inRemoteIOUnit, AURenderCallbackStruct in
     
     size = sizeof(outASBD);
     // get it again
-    err = AudioUnitGetProperty( inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
-                               kAudioUnitScope_Input, 0, &outASBD, &size );
-    if( err )
+    err = AudioUnitGetProperty(inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
+                               kAudioUnitScope_Input, 0, &outASBD, &size);
+    if (err)
     {
         // TODO: "couldn't get the remote I/O unit's output client format"
         return false;
     }
     err = AudioUnitSetProperty( inRemoteIOUnit, kAudioUnitProperty_StreamFormat,
-                               kAudioUnitScope_Output, 1, &outASBD, sizeof(outASBD) );
-    if( err )
+                               kAudioUnitScope_Output, 1, &outASBD, sizeof(outASBD));
+    if (err)
     {
         // TODO: "couldn't set the remote I/O unit's input client format"
         return false;
     }
     // print the format
-    // printf( "format for remote i/o:\n" );
+    // printf( "format for remote i/o:\n");
     // outFormat.Print();
     
     // initialize remote I/O unit
-    err = AudioUnitInitialize( inRemoteIOUnit );
-    if( err )
+    err = AudioUnitInitialize(inRemoteIOUnit);
+    if (err)
     {
         // TODO: "couldn't initialize the remote I/O unit"
         return false;
@@ -213,8 +217,8 @@ static void rioInterruptionListener(ToneGeneratorViewController *inClientData, U
 // name: propListener()
 // desc: audio session property listener
 //-----------------------------------------------------------------------------
-static void propListener( void * inClientData, AudioSessionPropertyID inID,
-                         UInt32 inDataSize, const void * inData )
+static void propListener(void * inClientData, AudioSessionPropertyID inID,
+                         UInt32 inDataSize, const void * inData)
 {
     NSDictionary *routeDictionary = (__bridge NSDictionary *)inData;
     NSInteger reason = ((NSNumber *) [routeDictionary objectForKey:((NSString *) CFSTR(kAudioSession_AudioRouteChangeKey_Reason))]).intValue;
@@ -250,27 +254,27 @@ static void propListener( void * inClientData, AudioSessionPropertyID inID,
     }
 
     // detect audio route change
-    if( inID == kAudioSessionProperty_AudioRouteChange )
+    if (inID == kAudioSessionProperty_AudioRouteChange)
     {
         // status code
         OSStatus err;
         
         // if there was a route change, we need to dispose the current rio unit and create a new one
-        err = AudioComponentInstanceDispose( m_au );
-        if( err )
+        err = AudioComponentInstanceDispose(m_au);
+        if (err)
         {
             // TODO: "couldn't dispose remote i/o unit"
             return;
         }
         
         // set up
-        setupRemoteIO( m_au, m_renderProc, m_dataFormat );
+        setupRemoteIO(m_au, m_renderProc, m_dataFormat);
         
         UInt32 size = sizeof(m_hwSampleRate);
         // get sample rate
-        err = AudioSessionGetProperty( kAudioSessionProperty_CurrentHardwareSampleRate,
-                                      &size, &m_hwSampleRate );
-        if( err )
+        err = AudioSessionGetProperty(kAudioSessionProperty_CurrentHardwareSampleRate,
+                                      &size, &m_hwSampleRate);
+        if (err)
         {
             // TODO: "couldn't get new sample rate"
             return;
@@ -280,8 +284,8 @@ static void propListener( void * inClientData, AudioSessionPropertyID inID,
 //        MoAudio::checkInput();
         
         // start audio unit
-        err = AudioOutputUnitStart( m_au );
-        if( err )
+        err = AudioOutputUnitStart(m_au);
+        if (err)
         {
             // TODO: "couldn't start unit"
             return;
@@ -290,29 +294,29 @@ static void propListener( void * inClientData, AudioSessionPropertyID inID,
         // get route
         CFStringRef newRoute;
         size = sizeof(CFStringRef);
-        err = AudioSessionGetProperty( kAudioSessionProperty_AudioRoute, &size, &newRoute );
-        if( err )
+        err = AudioSessionGetProperty(kAudioSessionProperty_AudioRoute, &size, &newRoute);
+        if (err)
         {
             // TODO: "couldn't get new audio route"
             return;
         }
         
         // check route
-        if( newRoute )
+        if (newRoute)
         {
-            // CFShow( newRoute );
-            if( CFStringCompare( newRoute, CFSTR("Headset"), NULL ) == kCFCompareEqualTo )
+            // CFShow(newRoute);
+            if (CFStringCompare(newRoute, CFSTR("Headset"), NULL) == kCFCompareEqualTo)
             { }
-            else if( CFStringCompare( newRoute, CFSTR("Receiver" ), NULL ) == kCFCompareEqualTo )
+            else if (CFStringCompare(newRoute, CFSTR("Receiver"), NULL) == kCFCompareEqualTo)
             { }
-            else if( CFStringCompare( newRoute, CFSTR("ReceiverAndMicrophone" ), NULL ) == kCFCompareEqualTo )
+            else if (CFStringCompare(newRoute, CFSTR("ReceiverAndMicrophone"), NULL) == kCFCompareEqualTo)
             { /* イヤホン */
                 UInt32 audioRouteOverride = kAudioSessionOverrideAudioRoute_Speaker;
                 AudioSessionSetProperty (kAudioSessionProperty_OverrideAudioRoute,
                                          sizeof(audioRouteOverride),
                                          &audioRouteOverride);
             }
-            else if( CFStringCompare( newRoute, CFSTR("SpeakerAndMicrophone" ), NULL ) == kCFCompareEqualTo )
+            else if (CFStringCompare(newRoute, CFSTR("SpeakerAndMicrophone"), NULL) == kCFCompareEqualTo)
             { /* デフォルト */ }
             else // unknown
             { }
@@ -326,7 +330,7 @@ OSStatus renderTone(
                     AudioUnitRenderActionFlags 	*ioActionFlags,
                     const AudioTimeStamp 		*inTimeStamp,
                     UInt32 						inBusNumber,
-                    UInt32 						inNumberFrames,
+                    UInt32 						inFrameSize,
                     AudioBufferList 			*ioData)
 
 {
@@ -337,94 +341,103 @@ OSStatus renderTone(
         /* __block */ Float32 theta = viewController->theta;
         // Fixed amplitude is good enough for our purposes
         const Float32 amplitude = 0.25;
+        NSUInteger frequency = [[NSUserDefaults standardUserDefaults] integerForKey:kOscillatorFrequencyKey];
+        Float32 theta_increment = 2.0 * M_PI * ((Float32) frequency) / 44100.0;
+        
+        const int channel = 0;
+        Float32 *buffer = (Float32 *)ioData->mBuffers[channel].mData;
+        NSUInteger waveType = [[NSUserDefaults standardUserDefaults] integerForKey:kOscillatorWaveTypeKey];
+        bool useTheta = (waveType <= kTriangle);
 
-//        dispatch_async(dispatch_get_main_queue(), ^{ // UI更新はメインスレッドやること！！
-            // This is a mono tone generator so we only need the first buffer
-            //    Float32 theta_increment = 2.0 * M_PI * viewController->frequency / viewController->sampleRate;
-//            NSUInteger frequency = atoi([inRefCon.frequncy.text UTF8String]);
-            NSUInteger frequency = [[NSUserDefaults standardUserDefaults] integerForKey:kOscillatorFrequencyKey];
-            Float32 theta_increment = 2.0 * M_PI * ((Float32) frequency) / 44100.0;
-            
-            const int channel = 0;
-            Float32 *buffer = (Float32 *)ioData->mBuffers[channel].mData;
-            NSUInteger waveType = [[NSUserDefaults standardUserDefaults] integerForKey:kOscillatorWaveTypeKey];
-
-            // Generate the samples
-            for (UInt32 frame = 0; frame < inNumberFrames; frame++)
-            {
-//                switch (viewController.mode.selectedSegmentIndex) {
-                switch (waveType) {
-                    case kSin:
-                        buffer[frame] = sin(theta) * amplitude;
-                        break;
-                    case kSaw:
-                        buffer[frame] = ((theta / 6.0) - (floor(theta / 6.0) - floor(-theta / 6.0)) / 2.0) * amplitude;
-                        break;
-                    case kTriangle:
-                        buffer[frame] = acos(cos(theta)) * amplitude;
-                        break;
-                }
+        // Generate the samples
+        for (UInt32 frame = 0; frame < inFrameSize; frame++)
+        {
+            switch (waveType) {
+            case kSin:
+                buffer[frame] = sin(theta) * amplitude;
+                break;
+            case kSaw:
+                buffer[frame] = ((theta / 6.0) - (floor(theta / 6.0) - floor(-theta / 6.0)) / 2.0) * amplitude;
+                break;
+            case kTriangle:
+                buffer[frame] = acos(cos(theta)) * amplitude;
+                break;
+            case kPinkNoise:
+            case kBrownNoise:
+                buffer[frame] = (float) drand48();
+                break;
+            }
+            if (useTheta) {
                 theta += theta_increment;
                 if (theta > 2.0 * M_PI)
                 {
                     theta -= 2.0 * M_PI;
                 }
             }
-            // Store the theta back in the view controller
-            viewController->theta = theta;
-            
-            switch (sweepMode)
-            {
-            case kSweepRise:
-            case kSweepDown:
-                NSUInteger delta = 0;
+        }
+        // Store the theta back in the view controller
+        viewController->theta = theta;
+        // ノイズフィルター処理
+        switch (waveType) {
+        case kPinkNoise:
+            [m_pinkNoiseFilter processBuffer:buffer withFrameSize:inFrameSize];
+            break;
+        case kBrownNoise:
+            brownNoiseFilter(buffer, inFrameSize);
+            break;
+        }
 
-                if (frequency < 100) {
-                    delta += 1;
-                } else if (frequency < 500) {
-                    delta += 2;
-                } else if (frequency < 1000) {
-                    delta += 3;
-                } else if (frequency < 5000) {
-                    delta += 4;
-                } else if (frequency < 10000) {
-                    delta += 5;
-                } else if (frequency < 50000) {
-                    delta += 6;
-                } else if (frequency < 100000) {
-                    delta += 7;
-                }
-                if (sweepMode == kSweepRise) {
-                    frequency += delta;
-                } else {
-                    frequency -= delta;
-                }
-                if (frequency >= 22050) {
-                    frequency = 22050;
-                }
-                [[NSUserDefaults standardUserDefaults] setInteger:MAX(frequency, 20.0) forKey:kOscillatorFrequencyKey];
-                NSDate *date = [NSDate date];
-                if ([date timeIntervalSinceDate:toneFlushDate] > RENDER_INTERVAL) {// 更新が頻繁過ぎると、OverCommit（スタック不足） になる。
-                    dispatch_async(dispatch_get_main_queue(), ^{ // UI更新はメインスレッドやること！！
-                        if (frequency >= 20 && frequency < 22050) {
-                            inRefCon.frequncy.text = [NSString stringWithFormat:@"%lu", (unsigned long)frequency];
-                            inRefCon.stepper.value = frequency;
-                        } else {
-                            inRefCon.frequncy.text = @"20";
-                            inRefCon.stepper.value = 20.0;
-                            [viewController stopProc];
+        switch (sweepMode)
+        {
+        case kSweepRise:
+        case kSweepDown:
+            NSUInteger delta = 0;
 
-                            [[NSUserDefaults standardUserDefaults] setInteger:20 forKey:kOscillatorFrequencyKey];
-                        }
-                    });
-                    toneFlushDate = date;
-                    DEBUG_LOG(@"%s %dHz %@", __func__, frequency, toneFlushDate);
-                } else {
-                    DEBUG_LOG(@"%s %dHz レイテンシーが小さすぎ！", __func__, frequency);
-                }
-                break;
+            if (frequency < 100) {
+                delta += 1;
+            } else if (frequency < 500) {
+                delta += 2;
+            } else if (frequency < 1000) {
+                delta += 3;
+            } else if (frequency < 5000) {
+                delta += 4;
+            } else if (frequency < 10000) {
+                delta += 5;
+            } else if (frequency < 50000) {
+                delta += 6;
+            } else if (frequency < 100000) {
+                delta += 7;
             }
-//        });
+            if (sweepMode == kSweepRise) {
+                frequency += delta;
+            } else {
+                frequency -= delta;
+            }
+            if (frequency >= 22050) {
+                frequency = 22050;
+            }
+            [[NSUserDefaults standardUserDefaults] setInteger:MAX(frequency, 20.0) forKey:kOscillatorFrequencyKey];
+            NSDate *date = [NSDate date];
+            if ([date timeIntervalSinceDate:toneFlushDate] > RENDER_INTERVAL) {// 更新が頻繁過ぎると、OverCommit（スタック不足） になる。
+                dispatch_async(dispatch_get_main_queue(), ^{ // UI更新はメインスレッドやること！！
+                    if (frequency >= 20 && frequency < 22050) {
+                        inRefCon.frequncy.text = [NSString stringWithFormat:@"%lu", (unsigned long)frequency];
+                        inRefCon.stepper.value = frequency;
+                    } else {
+                        inRefCon.frequncy.text = @"20";
+                        inRefCon.stepper.value = 20.0;
+                        [viewController stopProc];
+
+                        [[NSUserDefaults standardUserDefaults] setInteger:20 forKey:kOscillatorFrequencyKey];
+                    }
+                });
+                toneFlushDate = date;
+                DEBUG_LOG(@"%s %dHz %@", __func__, frequency, toneFlushDate);
+            } else {
+                DEBUG_LOG(@"%s %dHz レイテンシーが小さすぎ！", __func__, frequency);
+            }
+            break;
+        }
     }
     return noErr;
 }
@@ -447,38 +460,45 @@ OSStatus renderTone(
 //    [_sweep setImage:[UIImage imageNamed:@"sweepOFF"] forState:UIControlStateNormal];
 
     sampleRate = 44100;
-    
+
     OSStatus result = AudioSessionInitialize(NULL, NULL, (AudioSessionInterruptionListener) rioInterruptionListener, (__bridge void *)(self));
     if (result == kAudioSessionNoError)
     {
 #if 1
 //        UInt32 sessionCategory = kAudioSessionCategory_MediaPlayback; // オリジナル
-        // momu の方式に合わせたけど、ReceiverAndMicrophone という扱いになって kAudioSessionRouteChangeReason_CategoryChange が発生する。
+        // momu の方式に合わせたけど、ReceiverAndMicrophone という扱いになって
+        // kAudioSessionRouteChangeReason_CategoryChange が発生する。
         UInt32 sessionCategory = kAudioSessionCategory_PlayAndRecord;
         AudioSessionSetProperty(kAudioSessionProperty_AudioCategory, sizeof(sessionCategory), &sessionCategory);
 #endif
     }
-#if 0
-//    AudioSessionSetActive(true); // momu に任す。
+#if 0 // momu に任す。
+#if OLD
+    AudioSessionSetActive(true);
+#else
     NSError *activationError = nil;
     [[AVAudioSession sharedInstance] setActive: YES error: &activationError];
+#endif
 #endif
     
     _frequncy.delegate = self;
 }
 
 - (void)viewWillAppear:(BOOL)animated {
-
+    
     static BOOL showsUp = NO;
     
     [super viewWillAppear:animated];
-
+    
     if (showsUp == NO) {
         _stepper.value = [[NSUserDefaults standardUserDefaults] floatForKey:kOscillatorFrequencyKey];
         _frequncy.text = [NSString stringWithFormat:@"%lu", (unsigned long) _stepper.value];
     }
     _frequncy.font = [UIFont fontWithName:@"CourierNewPS-BoldMT" size:18.0];
     showsUp = YES;
+    
+    NSUInteger waveType = [[NSUserDefaults standardUserDefaults] integerForKey:kOscillatorWaveTypeKey];
+    _mode.selectedSegmentIndex = waveType;
 }
 
 - (void) viewDidAppear:(BOOL)animated {
@@ -487,7 +507,6 @@ OSStatus renderTone(
 
 - (void) viewDidDisappear:(BOOL)animated {
     [super viewDidDisappear:animated];
-
 }
 
 - (void)didReceiveMemoryWarning {
@@ -560,7 +579,7 @@ OSStatus renderTone(
                                 sizeof(AudioStreamBasicDescription));
     NSAssert1(err == noErr, @"Error setting stream format: %hd", err);
     // set property listener
-//    err = AudioSessionAddPropertyListener( kAudioSessionProperty_AudioRouteChange, propListener, NULL );
+//    err = AudioSessionAddPropertyListener(kAudioSessionProperty_AudioRouteChange, propListener, NULL);
 //    NSAssert1(err == noErr, @"Error setting stream format: %hd", err);
 }
 
@@ -568,12 +587,25 @@ OSStatus renderTone(
 {
     dispatch_async(dispatch_get_main_queue(), ^{ // UI更新はメインスレッドやること！！
         switch (modeCtrl.selectedSegmentIndex) {
-            case 0:// Tone
-                self.frequncy.enabled = YES;
-                break;
-            case 1:// Sweep
-                self.frequncy.enabled = NO;
-                break;
+        case kSin:
+        case kSaw:
+        case kTriangle:
+            self.min.enabled = true;
+            self.max.enabled = true;
+            self.stepper.enabled = true;
+            self.frequncy.enabled = true;
+            self.rise.enabled = true;
+            self.down.enabled = true;
+            break;
+        case kPinkNoise:
+        case kBrownNoise:
+            self.min.enabled = false;
+            self.max.enabled = false;
+            self.stepper.enabled = false;
+            self.frequncy.enabled = false;
+            self.rise.enabled = false;
+            self.down.enabled = false;
+            break;
         }
         [[NSUserDefaults standardUserDefaults] setInteger:modeCtrl.selectedSegmentIndex forKey:kOscillatorWaveTypeKey];
     });

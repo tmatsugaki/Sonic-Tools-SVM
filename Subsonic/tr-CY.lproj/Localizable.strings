@@ -1,0 +1,73 @@
+/*
+ Localizable.strings
+ Subsonic
+ 
+ Created by matsu on 2013/12/22.
+ Copyright (c) 2013年 Rikki Systems Inc. All rights reserved.
+ */
+"Abort" = "アボート";
+"Can't send an e-mail." = "メールを送信できません。";
+"Can't work with a Jail Broken device." = "システムが改造された端末では動作しません。";
+"Cancel" = "キャンセル";
+"Close" = "閉じる";
+"Delete" = "削除";
+"Edit" = "編集";
+"Failed to send e-mail." = "メールの送信に失敗しました。";
+"Fatal Error" = "致命的エラー";
+"GoWebsite" = "サポートWebサイト";
+"Info" = "Bilgi";
+"Mail" = "Posta";
+"Note" = "Not";
+"Notify" = "Bildir";
+"OK" = "TAMAM";
+"Other Apps" = "Diğer uygulamalar";
+"RikkiSystemsURL" = "https://itunes.apple.com/jp/artist/rikki-systems-inc./id497295364";
+"https://itunes.apple.com/us/app/sonic-tools/id1245046029?mt=8" = "https://itunes.apple.com/jp/app/sonic-tools/id1245046029?mt=8";
+"Subsonic Support" = "ses altı desteği";
+"Support Mail" = "Destek Postası";
+"This app is cracked \"@\"." = "改造された \"@\" です。";
+"Type" = "Tip";
+"Version" = "Sürüm";
+"WriteReviews" = "Yorum Yaz";
+
+"Microphone Access Denied" = "Mikrofon Erişimi Reddedildi";
+"This app requires access to your device's Microphone.\n\nPlease enable Microphone access for this app in Settings.app." = "Bu uygulama, cihazınızın Mikrofonuna erişim gerektiriyor.\n\nLütfen Settings.app'te bu uygulama için Mikrofon erişimini etkinleştirin.";
+"FFT Analyzer isn't initialized owing to memory shortage." = "Bellek yetersizliği nedeniyle FFT Analyzer başlatılamadı.";
+"Please deallocate unused memory." = "Lütfen kullanılmayan belleği yeniden ayırın.";
+"Dismiss" = "Azletmek";
+"No Compass!" = "Pusula yok!";
+"This device does not have the ability to measure magnetic fields." = "Bu cihazın manyetik alanları ölçme özelliği yoktur.";
+"SND Spectrum Peak" = "SND Spektrum Zirvesi";
+"SND Spectrum" = "SND Spektrumu";
+"SND Spectrogram" = "SND Spektrogramı";
+"SND RMS" = "SND RMS";
+"VIB RMS" = "VIB RMS";
+"MF RMS" = "MF RMS";
+"Log" = "Logarithm";
+"Linear" = "Doğrusal";
+"Bar" = "kamış";
+"Line" = "Astar";
+"Window Function" = "Pencere İşlevi";
+"Rectangular" = "kullanmayın";
+"Hamming" = "Hamming";
+"Hanning" = "Hanning";
+"Blackman" = "Blackman";
+"Buffer" = "Tampon";
+"Latency" = "Gecikme";
+"Slow" = "Yavaş";
+"Standard" = "Standart";
+"Fast" = "Hızlı";
+"Sound Analysis" = "Ses Analizi";
+"FFT Color" = "FFT Renk";
+"RTA Color" = "RTA Renk";
+"Mic Gain" = "Mikrofon kazanç";
+"RTA Average" = "RTA Ortalama";
+"None" = "Hiçbiri";
+"Infinite" = "Sonsuz";
+"Noise Reduction" = "Gürültü Azaltma";
+"Typical Settings" = "Tipik Ayarlar";
+"Exploration Settings" = "Keşif Ayarları";
+"Spectrogram" = "Spektrogram";
+"Clear" = "Temizlemek";
+"Peak Hold" = "Zirve Tutma";
+"Grid" = "Kafes";

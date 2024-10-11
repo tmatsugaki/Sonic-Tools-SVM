@@ -1,0 +1,73 @@
+/*
+ Localizable.strings
+ Subsonic
+ 
+ Created by matsu on 2013/12/22.
+ Copyright (c) 2013年 Rikki Systems Inc. All rights reserved.
+ */
+"Abort" = "アボート";
+"Can't send an e-mail." = "メールを送信できません。";
+"Can't work with a Jail Broken device." = "システムが改造された端末では動作しません。";
+"Cancel" = "キャンセル";
+"Close" = "閉じる";
+"Delete" = "削除";
+"Edit" = "編集";
+"Failed to send e-mail." = "メールの送信に失敗しました。";
+"Fatal Error" = "致命的エラー";
+"GoWebsite" = "サポートWebサイト";
+"Info" = "情報";
+"Mail" = "メール";
+"Note" = "通知";
+"Notify" = "通知";
+"OK" = "はい";
+"Other Apps" = "他のアプリ";
+"RikkiSystemsURL" = "https://itunes.apple.com/jp/artist/rikki-systems-inc./id497295364";
+"https://itunes.apple.com/us/app/sonic-tools/id1245046029?mt=8" = "https://itunes.apple.com/jp/app/sonic-tools/id1245046029?mt=8";
+"Subsonic Support" = "Subsonic サポート";
+"Support Mail" = "ご意見・不具合報告";
+"This app is cracked \"@\"." = "改造された \"@\" です。";
+"Type" = "種別";
+"Version" = "バージョン";
+"WriteReviews" = "レビューを書く";
+
+"Microphone Access Denied" = "マイクにアクセスできません。";
+"This app requires access to your device's Microphone.\n\nPlease enable Microphone access for this app in Settings.app." = "このアプリはマイクを使用します。\n\n設定.appを起動して、マイクのスイッチをオンしてください。";
+"FFT Analyzer isn't initialized owing to memory shortage." = "メモリー不足のため、FFT アナライザーの初期化に失敗しました。";
+"Please deallocate unused memory." = "未使用のアプリを中止するなどして、メモリーを解放してください。";
+"Dismiss" = "閉じる";
+"No Compass!" = "コンパスがありません。";
+"This device does not have the ability to measure magnetic fields." = "このデバイスには磁気センサーがありません。";
+"SND Spectrum Peak" = "音声スペクトル（ピーク）";
+"SND Spectrum" = "音声スペクトル";
+"SND Spectrogram" = "音声スペクトログラム";
+"SND RMS" = "音声実効値";
+"VIB RMS" = "振動実効値";
+"MF RMS" = "磁界実効値";
+"Log" = "対数";
+"Linear" = "リニア";
+"Bar" = "バー";
+"Line" = "ライン";
+"Window Function" = "窓関数";
+"Rectangular" = "不使用";
+"Hamming" = "ハミング";
+"Hanning" = "ハニング";
+"Blackman" = "ブラックマン";
+"Buffer" = "バッファ";
+"Latency" = "レイテンシー";
+"Slow" = "低速";
+"Standard" = "標準";
+"Fast" = "高速";
+"Sound Analysis" = "音声解析";
+"FFT Color" = "FFTカラー";
+"RTA Color" = "RTAカラー";
+"Mic Gain" = "マイクゲイン";
+"RTA Average" = "平均";
+"None" = "しない";
+"Infinite" = "無限";
+"Noise Reduction" = "ノイズ低減";
+"Typical Settings" = "デフォルト設定";
+"Exploration Settings" = "探査用設定";
+"Spectrogram" = "スペクトログラム";
+"Clear" = "消去";
+"Peak Hold" = "ピークホールド";
+"Grid" = "グリッド";

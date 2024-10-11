@@ -1,9 +1,22 @@
+/*
+    Sonic Tools SVM (FFT Analyzer/RTA for iOS)
+    Copyright (C) 2017-2024  Takuji Matsugaki
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 //
 //  PinkNoiseFFT.mm
-//  Subsonic
-//
-//  Created by 松垣卓士 on 2024/10/09.
-//  Copyright © 2024 Rikki Systems Inc. All rights reserved.
 //
 // 1/f (3dB/oct)
 #import "PinkNoiseFFT.h"
